@@ -749,42 +749,42 @@ export default function DriverDashboard() {
                       </span>
                     </div>
                   )) || (
-                    <p className="text-gray-400 text-center py-4">Belum ada riwayat transaksi</p>
+                    <p className="text-gray-500 text-center py-4">Belum ada riwayat transaksi</p>
                   )}
                 </div>
               </div>
             )}
 
             {/* Statistik Mingguan */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium mb-3 flex items-center">
-                <Calendar className="w-4 h-4 mr-2" />
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
+              <h4 className="font-medium mb-3 flex items-center text-gray-700">
+                <Calendar className="w-4 h-4 mr-2 text-orange-400" />
                 Statistik Pendapatan
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <p className="text-xl font-bold text-yellow-400">
+                  <p className="text-xl font-bold text-orange-500">
                     {formatCurrency(earningsStats?.today || 0)}
                   </p>
-                  <p className="text-xs text-gray-400">Hari Ini</p>
+                  <p className="text-xs text-gray-500">Hari Ini</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-green-400">
+                  <p className="text-xl font-bold text-orange-400">
                     {formatCurrency(earningsStats?.week || 0)}
                   </p>
-                  <p className="text-xs text-gray-400">Minggu Ini</p>
+                  <p className="text-xs text-gray-500">Minggu Ini</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-blue-400">
+                  <p className="text-xl font-bold text-orange-300">
                     {formatCurrency(earningsStats?.month || 0)}
                   </p>
-                  <p className="text-xs text-gray-400">Bulan Ini</p>
+                  <p className="text-xs text-gray-500">Bulan Ini</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-purple-400">
+                  <p className="text-xl font-bold text-orange-600">
                     {formatCurrency(earningsStats?.total || 0)}
                   </p>
-                  <p className="text-xs text-gray-400">Total</p>
+                  <p className="text-xs text-gray-500">Total</p>
                 </div>
               </div>
             </div>
@@ -1199,45 +1199,45 @@ export default function DriverDashboard() {
             </div>
 
             {/* Security Settings */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
               <div className="flex items-center mb-4">
-                <Shield className="w-5 h-5 text-gray-400 mr-2" />
-                <h4 className="font-medium">Keamanan</h4>
+                <Shield className="w-5 h-5 text-orange-400 mr-2" />
+                <h4 className="font-medium text-gray-700">Keamanan</h4>
               </div>
               
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded border border-orange-100">
                   <div>
-                    <span className="text-sm">Ubah PIN Dompet</span>
-                    <p className="text-xs text-gray-400">PIN untuk transaksi dompet</p>
+                    <span className="text-sm text-gray-700">Ubah PIN Dompet</span>
+                    <p className="text-xs text-gray-500">PIN untuk transaksi dompet</p>
                   </div>
                   <Button 
                     onClick={() => setShowChangePinModal(true)}
                     variant="ghost" 
                     size="sm" 
-                    className="text-yellow-400 hover:bg-gray-600"
+                    className="text-orange-500 hover:bg-orange-100"
                   >
                     Ubah
                   </Button>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded border border-orange-100">
                   <div>
-                    <span className="text-sm">Ubah Password</span>
-                    <p className="text-xs text-gray-400">Password login akun</p>
+                    <span className="text-sm text-gray-700">Ubah Password</span>
+                    <p className="text-xs text-gray-500">Password login akun</p>
                   </div>
                   <Button 
                     onClick={() => setShowChangePasswordModal(true)}
                     variant="ghost" 
                     size="sm" 
-                    className="text-yellow-400 hover:bg-gray-600"
+                    className="text-orange-500 hover:bg-orange-100"
                   >
                     Ubah
                   </Button>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded border border-orange-100">
                   <div>
-                    <span className="text-sm">Autentikasi 2 Faktor</span>
-                    <p className="text-xs text-gray-400">Keamanan ekstra dengan SMS</p>
+                    <span className="text-sm text-gray-700">Autentikasi 2 Faktor</span>
+                    <p className="text-xs text-gray-500">Keamanan ekstra dengan SMS</p>
                   </div>
                   <Switch defaultChecked={false} />
                 </div>
