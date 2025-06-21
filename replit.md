@@ -99,3 +99,4 @@ The application is configured for multiple deployment targets:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Language preference: Indonesian (Bahasa Indonesia)
