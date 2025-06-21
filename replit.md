@@ -86,10 +86,12 @@ The application is configured for multiple deployment targets:
 
 ## Recent Changes
 
-- January 15, 2025: Successfully migrated project from Replit Agent to Replit environment
+- June 21, 2025: Successfully migrated project from Replit Agent to Replit environment
   - Configured PostgreSQL database with proper environment variables
   - Applied database migrations using Drizzle ORM
   - Verified all dependencies are properly installed
+  - Fixed authentication system with proper password hashing
+  - Resolved driver status toggle functionality
   - Application running successfully on Replit
 
 - January 15, 2025: Implemented comprehensive driver dashboard features
