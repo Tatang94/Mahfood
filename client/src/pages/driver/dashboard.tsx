@@ -74,6 +74,10 @@ export default function DriverDashboard() {
   const [walletPin, setWalletPin] = useState('');
   const [showWalletHistory, setShowWalletHistory] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showChangePinModal, setShowChangePinModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [pinData, setPinData] = useState({ currentPin: '', newPin: '', confirmPin: '' });
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
   const { data: orders = [] } = useQuery({
     queryKey: ["/api/orders/driver", user?.id],
@@ -150,6 +154,77 @@ export default function DriverDashboard() {
     },
     onSuccess: () => {
       toast({ title: "Pengaturan berhasil diperbarui" });
+    }
+  });
+
+  const updateDriverStatusMutation = useMutation({
+    mutationFn: async (isOnline: boolean) => {
+      const response = await fetch('/api/drivers/status', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ isOnline, userId: user?.id })
+      });
+      if (!response.ok) throw new Error('Failed to update status');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me", user?.id] });
+      toast({ title: data.message });
+    }
+  });
+
+  const changePinMutation = useMutation({
+    mutationFn: async (data: { currentPin: string; newPin: string }) => {
+      const response = await fetch('/api/drivers/change-pin', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ ...data, userId: user?.id })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: data.message });
+      setShowChangePinModal(false);
+      setPinData({ currentPin: '', newPin: '', confirmPin: '' });
+    },
+    onError: (error: any) => {
+      toast({ title: error.message, variant: "destructive" });
+    }
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const response = await fetch('/api/drivers/change-password', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ ...data, userId: user?.id })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: data.message });
+      setShowChangePasswordModal(false);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    },
+    onError: (error: any) => {
+      toast({ title: error.message, variant: "destructive" });
     }
   });
 
@@ -260,6 +335,20 @@ export default function DriverDashboard() {
     }
   }, [user, driverData]);
 
+  // Sync driver online status with database
+  useEffect(() => {
+    if (driverData?.isOnline !== undefined) {
+      setDriverOnline(driverData.isOnline);
+    }
+  }, [driverData?.isOnline]);
+
+  // Sync driver online status with database
+  useEffect(() => {
+    if (driverData?.isOnline !== undefined) {
+      setDriverOnline(driverData.isOnline);
+    }
+  }, [driverData?.isOnline]);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header dengan Profil Driver */}
@@ -284,7 +373,12 @@ export default function DriverDashboard() {
               </p>
             </div>
             <Button
-              onClick={() => setDriverOnline(!driverOnline)}
+              onClick={() => {
+                const newStatus = !driverOnline;
+                setDriverOnline(newStatus);
+                updateDriverStatusMutation.mutate(newStatus);
+              }}
+              disabled={updateDriverStatusMutation.isPending}
               className={`w-12 h-12 rounded-full ${
                 driverOnline 
                   ? 'bg-red-500 hover:bg-red-600' 
@@ -1089,7 +1183,12 @@ export default function DriverDashboard() {
                     <span className="text-sm">Ubah PIN Dompet</span>
                     <p className="text-xs text-gray-400">PIN untuk transaksi dompet</p>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-yellow-400">
+                  <Button 
+                    onClick={() => setShowChangePinModal(true)}
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-yellow-400 hover:bg-gray-600"
+                  >
                     Ubah
                   </Button>
                 </div>
@@ -1098,7 +1197,12 @@ export default function DriverDashboard() {
                     <span className="text-sm">Ubah Password</span>
                     <p className="text-xs text-gray-400">Password login akun</p>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-yellow-400">
+                  <Button 
+                    onClick={() => setShowChangePasswordModal(true)}
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-yellow-400 hover:bg-gray-600"
+                  >
                     Ubah
                   </Button>
                 </div>
@@ -1173,6 +1277,183 @@ export default function DriverDashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Ubah PIN */}
+      {showChangePinModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="font-bold text-lg mb-4 text-white">Ubah PIN Dompet</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm text-gray-300">PIN Lama</Label>
+                <Input
+                  type="password"
+                  value={pinData.currentPin}
+                  onChange={(e) => setPinData({...pinData, currentPin: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Masukkan PIN lama (6 digit)"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm text-gray-300">PIN Baru</Label>
+                <Input
+                  type="password"
+                  value={pinData.newPin}
+                  onChange={(e) => setPinData({...pinData, newPin: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Masukkan PIN baru (6 digit)"
+                  maxLength={6}
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm text-gray-300">Konfirmasi PIN Baru</Label>
+                <Input
+                  type="password"
+                  value={pinData.confirmPin}
+                  onChange={(e) => setPinData({...pinData, confirmPin: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Ulangi PIN baru"
+                  maxLength={6}
+                />
+              </div>
+              
+              {pinData.newPin && pinData.confirmPin && pinData.newPin !== pinData.confirmPin && (
+                <p className="text-red-400 text-xs">PIN baru tidak cocok</p>
+              )}
+              
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  onClick={() => {
+                    setShowChangePinModal(false);
+                    setPinData({ currentPin: '', newPin: '', confirmPin: '' });
+                  }}
+                  variant="outline" 
+                  className="flex-1 border-gray-600 text-gray-300"
+                >
+                  Batal
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (!pinData.currentPin || !pinData.newPin || !pinData.confirmPin) {
+                      toast({ title: "Semua field harus diisi", variant: "destructive" });
+                      return;
+                    }
+                    if (pinData.newPin !== pinData.confirmPin) {
+                      toast({ title: "PIN baru tidak cocok", variant: "destructive" });
+                      return;
+                    }
+                    if (pinData.newPin.length !== 6 || !/^\d{6}$/.test(pinData.newPin)) {
+                      toast({ title: "PIN harus 6 digit angka", variant: "destructive" });
+                      return;
+                    }
+                    changePinMutation.mutate({
+                      currentPin: pinData.currentPin,
+                      newPin: pinData.newPin
+                    });
+                  }}
+                  disabled={changePinMutation.isPending || !pinData.currentPin || !pinData.newPin || !pinData.confirmPin || pinData.newPin !== pinData.confirmPin}
+                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                >
+                  {changePinMutation.isPending ? 'Mengubah...' : 'Simpan'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ubah Password */}
+      {showChangePasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="font-bold text-lg mb-4 text-white">Ubah Password</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm text-gray-300">Password Lama</Label>
+                <Input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Masukkan password lama"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm text-gray-300">Password Baru</Label>
+                <Input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Masukkan password baru (min 6 karakter)"
+                />
+              </div>
+              
+              <div>
+                <Label className="text-sm text-gray-300">Konfirmasi Password Baru</Label>
+                <Input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Ulangi password baru"
+                />
+              </div>
+              
+              {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                <p className="text-red-400 text-xs">Password baru tidak cocok</p>
+              )}
+              
+              {passwordData.newPassword && passwordData.newPassword.length < 6 && (
+                <p className="text-red-400 text-xs">Password minimal 6 karakter</p>
+              )}
+              
+              <div className="flex space-x-3 pt-4">
+                <Button 
+                  onClick={() => {
+                    setShowChangePasswordModal(false);
+                    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  }}
+                  variant="outline" 
+                  className="flex-1 border-gray-600 text-gray-300"
+                >
+                  Batal
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+                      toast({ title: "Semua field harus diisi", variant: "destructive" });
+                      return;
+                    }
+                    if (passwordData.newPassword !== passwordData.confirmPassword) {
+                      toast({ title: "Password baru tidak cocok", variant: "destructive" });
+                      return;
+                    }
+                    if (passwordData.newPassword.length < 6) {
+                      toast({ title: "Password minimal 6 karakter", variant: "destructive" });
+                      return;
+                    }
+                    changePasswordMutation.mutate({
+                      currentPassword: passwordData.currentPassword,
+                      newPassword: passwordData.newPassword
+                    });
+                  }}
+                  disabled={changePasswordMutation.isPending || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || passwordData.newPassword.length < 6}
+                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                >
+                  {changePasswordMutation.isPending ? 'Mengubah...' : 'Simpan'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700">

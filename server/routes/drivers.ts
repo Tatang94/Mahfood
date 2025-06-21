@@ -259,6 +259,126 @@ export function registerDriverRoutes(app: Express) {
       res.status(500).json({ message: "Failed to fetch earnings statistics" });
     }
   });
+
+  // Change driver online status
+  app.put('/api/drivers/status', async (req, res) => {
+    try {
+      const { isOnline } = req.body;
+      const userId = req.body.userId || 1;
+
+      const updatedDriver = await db
+        .update(drivers)
+        .set({ isOnline: Boolean(isOnline) })
+        .where(eq(drivers.userId, Number(userId)))
+        .returning();
+
+      if (!updatedDriver.length) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+
+      res.json({ 
+        message: `Driver status berhasil diubah ke ${isOnline ? 'ONLINE' : 'OFFLINE'}`,
+        isOnline: updatedDriver[0].isOnline 
+      });
+    } catch (error) {
+      console.error('Error updating driver status:', error);
+      res.status(500).json({ message: "Failed to update driver status" });
+    }
+  });
+
+  // Change wallet PIN
+  app.put('/api/drivers/change-pin', async (req, res) => {
+    try {
+      const { currentPin, newPin } = req.body;
+      const userId = req.body.userId || 1;
+
+      if (!currentPin || !newPin) {
+        return res.status(400).json({ message: "PIN lama dan PIN baru harus diisi" });
+      }
+
+      if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+        return res.status(400).json({ message: "PIN baru harus 6 digit angka" });
+      }
+
+      // Get wallet
+      const wallet = await db
+        .select()
+        .from(userWallets)
+        .where(eq(userWallets.userId, Number(userId)))
+        .limit(1);
+
+      if (!wallet.length) {
+        return res.status(404).json({ message: "Dompet tidak ditemukan" });
+      }
+
+      // Verify current PIN
+      const isCurrentPinValid = await bcrypt.compare(currentPin, wallet[0].pin);
+      if (!isCurrentPinValid) {
+        return res.status(400).json({ message: "PIN lama tidak benar" });
+      }
+
+      // Hash new PIN
+      const hashedNewPin = await bcrypt.hash(newPin, 10);
+
+      // Update PIN
+      await db
+        .update(userWallets)
+        .set({ pin: hashedNewPin })
+        .where(eq(userWallets.id, wallet[0].id));
+
+      res.json({ message: "PIN dompet berhasil diubah" });
+    } catch (error) {
+      console.error('Error changing PIN:', error);
+      res.status(500).json({ message: "Gagal mengubah PIN" });
+    }
+  });
+
+  // Change password
+  app.put('/api/drivers/change-password', async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.body.userId || 1;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Password lama dan password baru harus diisi" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Password baru minimal 6 karakter" });
+      }
+
+      // Get user
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, Number(userId)))
+        .limit(1);
+
+      if (!user.length) {
+        return res.status(404).json({ message: "User tidak ditemukan" });
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user[0].password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Password lama tidak benar" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await db
+        .update(users)
+        .set({ password: hashedNewPassword })
+        .where(eq(users.id, Number(userId)));
+
+      res.json({ message: "Password berhasil diubah" });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      res.status(500).json({ message: "Gagal mengubah password" });
+    }
+  });
   // Get driver by ID
   app.get('/api/drivers/:id', async (req, res) => {
     try {
