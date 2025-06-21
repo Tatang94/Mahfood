@@ -688,7 +688,7 @@ export default function DriverDashboard() {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 onClick={() => setShowWithdrawForm(!showWithdrawForm)}
-                disabled={(driverData?.totalEarnings || 0) <= 0}
+                disabled={false}
                 className="bg-white/90 text-gray-700 border border-orange-100 h-16 flex flex-col hover:bg-orange-50 shadow-lg"
               >
                 <DollarSign className="w-6 h-6 mb-1 text-orange-400" />
@@ -769,14 +769,14 @@ export default function DriverDashboard() {
                   <Button 
                     onClick={() => {
                       const amount = Number(withdrawAmount);
-                      if (amount >= 50000 && amount <= (driverData?.totalEarnings || 0)) {
+                      if (amount >= 50000) {
                         withdrawMutation.mutate(amount);
                         setWithdrawAmount('');
                         setShowWithdrawForm(false);
                       } else {
                         toast({ 
                           title: "Jumlah tidak valid", 
-                          description: "Minimal Rp 50.000 dan tidak boleh melebihi saldo",
+                          description: "Minimal Rp 50.000",
                           variant: "destructive" 
                         });
                       }

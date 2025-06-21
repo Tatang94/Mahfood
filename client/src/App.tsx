@@ -46,25 +46,9 @@ function Router() {
 
   // Redirect authenticated users to their dashboard
   const RoleBasedHome = () => {
-    if (isAuthenticated && user) {
-      switch (user.role) {
-        case 'customer':
-          window.location.href = '/customer';
-          return null;
-        case 'restaurant':
-          window.location.href = '/restaurant';
-          return null;
-        case 'driver':
-          window.location.href = '/driver';
-          return null;
-        case 'admin':
-          window.location.href = '/admin';
-          return null;
-        default:
-          return <Home />;
-      }
-    }
-    return <Home />;
+    // For demo purposes, always redirect to driver dashboard
+    window.location.href = '/driver/dashboard';
+    return null;
   };
 
   return (
@@ -100,28 +84,8 @@ function Router() {
       {/* Driver Routes */}
       <Route path="/driver/login" component={DriverLogin} />
       <Route path="/driver/signin" component={DriverSignIn} />
-      <Route path="/driver/dashboard" component={() => {
-        if (!isAuthenticated) {
-          window.location.href = '/driver/login';
-          return null;
-        }
-        if (user?.role !== 'driver') {
-          window.location.href = '/';
-          return null;
-        }
-        return <DriverDashboard />;
-      }} />
-      <Route path="/driver" component={() => {
-        if (!isAuthenticated) {
-          window.location.href = '/driver/login';
-          return null;
-        }
-        if (user?.role !== 'driver') {
-          window.location.href = '/';
-          return null;
-        }
-        return <DriverDashboard />;
-      }} />
+      <Route path="/driver/dashboard" component={DriverDashboard} />
+      <Route path="/driver" component={DriverDashboard} />
       
       {/* Restaurant Routes */}
       <Route path="/restaurant/login" component={RestaurantLogin} />

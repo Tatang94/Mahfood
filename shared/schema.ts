@@ -94,7 +94,7 @@ export const orders = pgTable("orders", {
 export const driverEarnings = pgTable("driver_earnings", {
   id: serial("id").primaryKey(),
   driverId: integer("driver_id").notNull().references(() => drivers.id),
-  orderId: integer("order_id").notNull().references(() => orders.id),
+  orderId: integer("order_id"),
   amount: integer("amount").notNull(),
   type: text("type").notNull(), // delivery, bonus, tip
   createdAt: timestamp("created_at").defaultNow(),

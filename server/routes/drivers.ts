@@ -380,6 +380,130 @@ export function registerDriverRoutes(app: Express) {
       res.status(500).json({ message: "Gagal mengubah password" });
     }
   });
+
+  // Withdraw earnings endpoint
+  app.post('/api/drivers/withdraw', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ message: "Authorization required" });
+      }
+
+      const { amount, userId, bankAccount, bankName, accountHolder } = req.body;
+
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid withdrawal amount" });
+      }
+
+      // Get driver data
+      const driver = await db
+        .select()
+        .from(drivers)
+        .where(eq(drivers.userId, Number(userId)))
+        .limit(1);
+
+      if (!driver.length) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+
+      const driverData = driver[0];
+
+      // Check if driver has enough balance
+      if (driverData.totalEarnings < amount) {
+        return res.status(400).json({ message: "Saldo tidak mencukupi untuk penarikan" });
+      }
+
+      // Minimum withdrawal amount check
+      if (amount < 50000) {
+        return res.status(400).json({ message: "Minimum penarikan adalah Rp 50.000" });
+      }
+
+      // Create withdrawal request
+      const [withdrawal] = await db
+        .insert(driverWithdrawals)
+        .values({
+          driverId: driverData.id,
+          amount: amount,
+          status: "pending",
+          bankAccount: bankAccount || "Default Bank Account",
+          bankName: bankName || "Bank BCA",
+          accountHolder: accountHolder || driverData.userId.toString(),
+          requestedAt: new Date()
+        })
+        .returning();
+
+      // Update driver's total earnings (deduct the withdrawal amount)
+      await db
+        .update(drivers)
+        .set({ 
+          totalEarnings: driverData.totalEarnings - amount
+        })
+        .where(eq(drivers.id, driverData.id));
+
+      // Auto-approve withdrawal for demo purposes (in real app, this would be manual approval)
+      setTimeout(async () => {
+        try {
+          await db
+            .update(driverWithdrawals)
+            .set({ 
+              status: "completed",
+              processedAt: new Date(),
+              notes: "Penarikan berhasil diproses otomatis"
+            })
+            .where(eq(driverWithdrawals.id, withdrawal.id));
+        } catch (error) {
+          console.error('Error auto-approving withdrawal:', error);
+        }
+      }, 3000);
+
+      res.json({ 
+        message: "Permintaan penarikan berhasil diajukan",
+        withdrawalId: withdrawal.id,
+        amount: amount,
+        status: "pending"
+      });
+    } catch (error) {
+      console.error('Error processing withdrawal:', error);
+      res.status(500).json({ message: "Gagal memproses penarikan" });
+    }
+  });
+
+  // Get withdrawal history
+  app.get('/api/drivers/withdrawals', async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ message: "Authorization required" });
+      }
+
+      const userId = req.query.userId || 1;
+
+      // Get driver data
+      const driver = await db
+        .select()
+        .from(drivers)
+        .where(eq(drivers.userId, Number(userId)))
+        .limit(1);
+
+      if (!driver.length) {
+        return res.status(404).json({ message: "Driver not found" });
+      }
+
+      // Get withdrawal history
+      const withdrawals = await db
+        .select()
+        .from(driverWithdrawals)
+        .where(eq(driverWithdrawals.driverId, driver[0].id))
+        .orderBy(desc(driverWithdrawals.requestedAt))
+        .limit(20);
+
+      res.json(withdrawals);
+    } catch (error) {
+      console.error('Error fetching withdrawal history:', error);
+      res.status(500).json({ message: "Failed to fetch withdrawal history" });
+    }
+  });
+
   // Get driver by ID
   app.get('/api/drivers/:id', async (req, res) => {
     try {
