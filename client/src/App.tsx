@@ -19,7 +19,9 @@ import RestaurantLogin from "@/pages/restaurant/login";
 import CustomerLogin from "@/pages/customer/login";
 import CustomerSignIn from "@/pages/customer/signin";
 import DriverSignIn from "@/pages/driver/signin";
+import DriverRegister from "@/pages/driver/register";
 import RestaurantSignIn from "@/pages/restaurant/signin";
+import RestaurantRegister from "@/pages/restaurant/register";
 import CustomerDashboard from "@/pages/customer/dashboard";
 import RoleSelector from "@/components/role-selector";
 import Header from "@/components/header";
@@ -75,14 +77,16 @@ function Router() {
       }} />
       
       {/* Driver Routes */}
-      <Route path="/driver/login" component={DriverLogin} />
-      <Route path="/driver/signin" component={DriverSignIn} />
+      <Route path="/driver/login" component={DriverSignIn} />
+      <Route path="/driver/signin" component={DriverRegister} />
+      <Route path="/driver/register" component={DriverRegister} />
       <Route path="/driver/dashboard" component={DriverDashboard} />
       <Route path="/driver" component={DriverDashboard} />
       
       {/* Restaurant Routes */}
-      <Route path="/restaurant/login" component={RestaurantLogin} />
-      <Route path="/restaurant/signin" component={RestaurantSignIn} />
+      <Route path="/restaurant/login" component={RestaurantSignIn} />
+      <Route path="/restaurant/signin" component={RestaurantRegister} />
+      <Route path="/restaurant/register" component={RestaurantRegister} />
       <Route path="/restaurant" component={() => {
         if (!isAuthenticated) {
           window.location.href = '/restaurant/login';

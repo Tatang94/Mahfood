@@ -21,7 +21,7 @@ export default function DriverSignIn() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signin/driver', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,6 +32,9 @@ export default function DriverSignIn() {
       if (!response.ok) {
         throw new Error('Gagal masuk');
       }
+
+      const data = await response.json();
+      localStorage.setItem('auth_token', data.token);
 
       toast({
         title: "Berhasil Masuk",
@@ -70,7 +73,7 @@ export default function DriverSignIn() {
               Masuk Sebagai Driver
             </CardTitle>
             <CardDescription className="text-gray-600 mt-2">
-              Masuk untuk mulai mengantarkan pesanan dan meraih penghasilan
+              Masuk ke akun driver Anda untuk melanjutkan pekerjaan
             </CardDescription>
           </CardHeader>
 
