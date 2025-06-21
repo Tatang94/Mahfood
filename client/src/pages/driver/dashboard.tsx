@@ -1355,7 +1355,11 @@ export default function DriverDashboard() {
             {/* Logout */}
             <div className="pt-4">
               <Button 
-                onClick={logout}
+                onClick={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('token');
+                  window.location.href = '/driver/login';
+                }}
                 variant="destructive" 
                 className="w-full bg-red-400 hover:bg-red-500 text-white"
               >

@@ -45,7 +45,7 @@ export function useAuth(): UseAuthReturn {
   const logout = () => {
     authService.logout();
     setUser(null);
-    window.location.href = '/';
+    window.location.href = '/driver/login';
   };
 
   const hasRole = (role: string): boolean => {
