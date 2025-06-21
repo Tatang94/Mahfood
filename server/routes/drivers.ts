@@ -277,8 +277,9 @@ export function registerDriverRoutes(app: Express) {
       }
 
       res.json({ 
-        message: `Driver status berhasil diubah ke ${isOnline ? 'ONLINE' : 'OFFLINE'}`,
-        isOnline: updatedDriver[0].isOnline 
+        message: `Status driver berhasil diubah ke ${isOnline ? 'ONLINE' : 'OFFLINE'}`,
+        isOnline: updatedDriver[0].isOnline,
+        driver: updatedDriver[0]
       });
     } catch (error) {
       console.error('Error updating driver status:', error);

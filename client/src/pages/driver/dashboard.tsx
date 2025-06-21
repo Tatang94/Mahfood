@@ -172,7 +172,19 @@ export default function DriverDashboard() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/drivers/me", user?.id] });
-      toast({ title: data.message });
+      toast({ 
+        title: data.message,
+        description: `Status kerja berubah menjadi ${data.isOnline ? 'ONLINE' : 'OFFLINE'}`
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Gagal mengubah status", 
+        description: error.message,
+        variant: "destructive" 
+      });
+      // Revert local state if API call fails
+      setDriverOnline(!driverOnline);
     }
   });
 
@@ -342,7 +354,7 @@ export default function DriverDashboard() {
     }
   }, [driverData?.isOnline]);
 
-  // Sync driver online status with database
+  // Auto-refresh driver data when online status changes
   useEffect(() => {
     if (driverData?.isOnline !== undefined) {
       setDriverOnline(driverData.isOnline);
@@ -401,9 +413,19 @@ export default function DriverDashboard() {
             <p className="font-bold text-white">{driverData?.rating || 5.0} ⭐</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400">TOTAL ANTAR</p>
-            <p className="font-bold text-white">{driverData?.totalDeliveries || 0}</p>
+            <p className="text-xs text-gray-400">STATUS</p>
+            <p className={`font-bold text-xs ${driverOnline ? 'text-green-400' : 'text-red-400'}`}>
+              {driverOnline ? 'ONLINE' : 'OFFLINE'}
+            </p>
           </div>
+        </div>
+        
+        {/* Real-time Status Indicator */}
+        <div className="mt-2 flex items-center justify-center">
+          <div className={`w-2 h-2 rounded-full mr-2 ${driverOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+          <span className="text-xs text-gray-400">
+            {driverOnline ? 'Siap menerima pesanan' : 'Tidak menerima pesanan'}
+          </span>
         </div>
       </div>
 
@@ -1239,20 +1261,55 @@ export default function DriverDashboard() {
               </div>
             </div>
 
-            {/* Driver Stats */}
+            {/* Status Driver */}
             <div className="bg-gray-800 rounded-lg p-4">
               <h4 className="font-medium mb-3">Status Driver</h4>
               <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
+                <div className="p-3 bg-gray-700 rounded">
                   <p className="text-lg font-bold text-green-400">AKTIF</p>
                   <p className="text-xs text-gray-400">Status Akun</p>
                 </div>
-                <div>
-                  <p className="text-lg font-bold text-yellow-400">
+                <div className="p-3 bg-gray-700 rounded">
+                  <p className={`text-lg font-bold ${driverOnline ? 'text-green-400' : 'text-red-400'}`}>
                     {driverOnline ? 'ONLINE' : 'OFFLINE'}
                   </p>
                   <p className="text-xs text-gray-400">Status Kerja</p>
                 </div>
+              </div>
+              
+              {/* Sync Status Button */}
+              <div className="mt-4 p-3 bg-gray-700 rounded">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-medium">Kontrol Status Kerja</span>
+                    <p className="text-xs text-gray-400">Sinkron dengan tombol di header</p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const newStatus = !driverOnline;
+                      setDriverOnline(newStatus);
+                      updateDriverStatusMutation.mutate(newStatus);
+                    }}
+                    disabled={updateDriverStatusMutation.isPending}
+                    className={`px-4 py-2 rounded-full text-sm font-bold ${
+                      driverOnline 
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
+                        : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
+                  >
+                    {updateDriverStatusMutation.isPending ? 
+                      'Mengubah...' : 
+                      (driverOnline ? 'Set OFFLINE' : 'Set ONLINE')
+                    }
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Status Info */}
+              <div className="mt-3 text-xs text-gray-400">
+                <p>• Status tersinkron otomatis dengan header</p>
+                <p>• Perubahan disimpan ke database real-time</p>
+                <p>• Status online diperlukan untuk menerima pesanan</p>
               </div>
             </div>
 
