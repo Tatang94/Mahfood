@@ -44,16 +44,9 @@ function Router() {
     );
   }
 
-  // Redirect authenticated users to their dashboard
-  const RoleBasedHome = () => {
-    // For demo purposes, always redirect to driver dashboard
-    window.location.href = '/driver/dashboard';
-    return null;
-  };
-
   return (
     <Switch>
-      <Route path="/" component={RoleBasedHome} />
+      <Route path="/" component={Home} />
       <Route path="/menu" component={Menu} />
       <Route path="/menu/:category" component={Menu} />
       <Route path="/food/:id" component={FoodDetail} />
