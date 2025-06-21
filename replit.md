@@ -95,7 +95,7 @@ The application is configured for multiple deployment targets:
 - January 15, 2025: Integrated PayDisini payment gateway for TasPay top up
   - Added PayDisini service with API ID 3246 and proper authentication
   - Created complete wallet system with user_wallets and wallet_transactions tables
-  - Implemented top up functionality with multiple payment methods (QRIS, e-wallets, bank transfers)
+  - Implemented top up functionality with DANA payment method only (per user preference)
   - Added TopUpModal component with real-time transaction status checking
   - Integrated top up feature into customer dashboard payment section
 

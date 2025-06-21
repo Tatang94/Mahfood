@@ -119,9 +119,7 @@ export default function TopUpModal({ isOpen, onClose }: TopUpModalProps) {
   };
 
   const getMethodIcon = (code: string) => {
-    if (code === '11') return <QrCode className="w-5 h-5" />;
-    if (['13', '14', '15', '16', '17'].includes(code)) return <Smartphone className="w-5 h-5" />;
-    if (['21', '22', '23', '24', '25'].includes(code)) return <Building className="w-5 h-5" />;
+    if (code === '13') return <Smartphone className="w-5 h-5" />;
     return <CreditCard className="w-5 h-5" />;
   };
 

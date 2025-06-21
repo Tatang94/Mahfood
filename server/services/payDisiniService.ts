@@ -137,17 +137,7 @@ export class PayDisiniService {
   // Available payment methods
   getPaymentMethods() {
     return [
-      { code: '11', name: 'QRIS (All E-Wallet)', fee: 0.7 },
-      { code: '13', name: 'DANA', fee: 0.7 },
-      { code: '14', name: 'OVO', fee: 0.7 },
-      { code: '15', name: 'GoPay', fee: 0.7 },
-      { code: '16', name: 'LinkAja', fee: 0.7 },
-      { code: '17', name: 'ShopeePay', fee: 0.7 },
-      { code: '21', name: 'Bank Transfer BCA', fee: 4000 },
-      { code: '22', name: 'Bank Transfer BNI', fee: 4000 },
-      { code: '23', name: 'Bank Transfer BRI', fee: 4000 },
-      { code: '24', name: 'Bank Transfer Mandiri', fee: 4000 },
-      { code: '25', name: 'Bank Transfer BSI', fee: 4000 }
+      { code: '13', name: 'DANA', fee: 0.7 }
     ];
   }
 }
