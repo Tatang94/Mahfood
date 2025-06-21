@@ -644,8 +644,8 @@ export default function DriverDashboard() {
         {activeTab === "dompet" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-white">Dompet Driver</h3>
-              <TrendingUp className="w-5 h-5 text-green-400" />
+              <h3 className="font-bold text-lg text-gray-800">Dompet Driver</h3>
+              <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
             
             {/* Saldo */}
@@ -806,8 +806,8 @@ export default function DriverDashboard() {
         {activeTab === "profil" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-white">Profil Driver</h3>
-              <Edit className="w-5 h-5 text-gray-400" />
+              <h3 className="font-bold text-lg text-gray-800">Profil Driver</h3>
+              <Edit className="w-5 h-5 text-orange-600" />
             </div>
             
             {/* Profile Card */}
@@ -866,35 +866,35 @@ export default function DriverDashboard() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <h4 className="font-medium">Edit Informasi Profil</h4>
+                  <h4 className="font-medium text-gray-800">Edit Informasi Profil</h4>
                   
                   <div className="space-y-3">
                     <div>
-                      <Label className="text-sm text-gray-300">Nama Lengkap</Label>
+                      <Label className="text-sm text-gray-700">Nama Lengkap</Label>
                       <Input
                         value={profileData.name}
                         onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-white border-orange-200 text-gray-800"
                         placeholder="Masukkan nama lengkap"
                       />
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-300">Nomor Telepon</Label>
+                      <Label className="text-sm text-gray-700">Nomor Telepon</Label>
                       <Input
                         value={profileData.phone}
                         onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-white border-orange-200 text-gray-800"
                         placeholder="08123456789"
                       />
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-300">Jenis Kendaraan</Label>
+                      <Label className="text-sm text-gray-700">Jenis Kendaraan</Label>
                       <select 
                         value={profileData.vehicleType}
                         onChange={(e) => setProfileData({...profileData, vehicleType: e.target.value})}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded"
+                        className="w-full p-2 bg-white border border-orange-200 text-gray-800 rounded"
                       >
                         <option value="">Pilih jenis kendaraan</option>
                         <option value="motorcycle">Motor</option>
@@ -903,11 +903,11 @@ export default function DriverDashboard() {
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-300">Nomor Polisi</Label>
+                      <Label className="text-sm text-gray-700">Nomor Polisi</Label>
                       <Input
                         value={profileData.vehicleNumber}
                         onChange={(e) => setProfileData({...profileData, vehicleNumber: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-white border-orange-200 text-gray-800"
                         placeholder="B 1234 CD"
                       />
                     </div>
@@ -917,14 +917,14 @@ export default function DriverDashboard() {
                     <Button 
                       onClick={() => setEditProfile(false)}
                       variant="outline" 
-                      className="flex-1 border-gray-600 text-gray-300"
+                      className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50"
                     >
                       Batal
                     </Button>
                     <Button 
                       onClick={handleProfileSave}
                       disabled={updateProfileMutation.isPending}
-                      className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                     >
                       {updateProfileMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                     </Button>
@@ -934,81 +934,84 @@ export default function DriverDashboard() {
             </div>
 
             {/* Performance Stats */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium mb-3">Performa Driver</h4>
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
+              <h4 className="font-medium mb-3 text-gray-800">Performa Driver</h4>
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-400">{driverData?.rating || 5.0}</p>
-                  <p className="text-xs text-gray-400">Rating</p>
+                <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded">
+                  <p className="text-2xl font-bold text-orange-600">{driverData?.rating || 5.0}</p>
+                  <p className="text-xs text-gray-700">Rating</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-400">{driverData?.totalDeliveries || 0}</p>
-                  <p className="text-xs text-gray-400">Total Antar</p>
+                <div className="text-center p-3 bg-green-50 border border-green-200 rounded">
+                  <p className="text-2xl font-bold text-green-600">{driverData?.totalDeliveries || 0}</p>
+                  <p className="text-xs text-gray-700">Total Antar</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-400">
+                <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded">
+                  <p className="text-2xl font-bold text-blue-600">
                     {orders.filter(o => o.status === 'delivered').length || 0}
                   </p>
-                  <p className="text-xs text-gray-400">Bulan Ini</p>
+                  <p className="text-xs text-gray-700">Bulan Ini</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-400">
+                <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded">
+                  <p className={`text-2xl font-bold ${driverData?.isOnline ? 'text-green-600' : 'text-red-500'}`}>
                     {driverData?.isOnline ? 'ONLINE' : 'OFFLINE'}
                   </p>
-                  <p className="text-xs text-gray-400">Status</p>
+                  <p className="text-xs text-gray-700">Status</p>
                 </div>
               </div>
             </div>
 
             {/* Status & Verification */}
             <div className="space-y-2">
-              <div className="bg-gray-800 rounded-lg p-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-green-200">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">Status Verifikasi</span>
-                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <span className="font-medium text-gray-800">Status Verifikasi</span>
+                  <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">KTP</span>
-                    <span className="text-green-400">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <span className="text-gray-700">📄 KTP</span>
+                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">SIM</span>
-                    <span className="text-green-400">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <span className="text-gray-700">🪪 SIM</span>
+                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">STNK</span>
-                    <span className="text-green-400">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <span className="text-gray-700">📋 STNK</span>
+                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Foto Profil</span>
-                    <span className="text-green-400">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <span className="text-gray-700">📷 Foto Profil</span>
+                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
                   </div>
                 </div>
+                <p className="text-xs text-gray-600 mt-2">
+                  Semua dokumen telah diverifikasi oleh sistem
+                </p>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-gray-400" />
+                  <Phone className="w-5 h-5 text-orange-600" />
                   <div>
-                    <span className="block">Kontak Darurat</span>
-                    <span className="text-xs text-gray-400">+62 812-3456-7890</span>
+                    <span className="block text-gray-800">Kontak Darurat</span>
+                    <span className="text-xs text-gray-600">+62 812-3456-7890</span>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-gray-400">
+                <Button variant="ghost" size="sm" className="text-orange-600 hover:bg-orange-50">
                   Edit
                 </Button>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <MapPin className="w-5 h-5 text-orange-600" />
                   <div>
-                    <span className="block">Alamat Rumah</span>
-                    <span className="text-xs text-gray-400">Jl. Merdeka No. 123, Tasikmalaya</span>
+                    <span className="block text-gray-800">Alamat Rumah</span>
+                    <span className="text-xs text-gray-600">Jl. Merdeka No. 123, Tasikmalaya</span>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-gray-400">
+                <Button variant="ghost" size="sm" className="text-orange-600 hover:bg-orange-50">
                   Edit
                 </Button>
               </div>
@@ -1020,8 +1023,8 @@ export default function DriverDashboard() {
         {activeTab === "pengaturan" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-white">Pengaturan</h3>
-              <Settings className="w-5 h-5 text-gray-400" />
+              <h3 className="font-bold text-lg text-gray-800">Pengaturan</h3>
+              <Settings className="w-5 h-5 text-orange-600" />
             </div>
             
             {/* Notification Settings */}
