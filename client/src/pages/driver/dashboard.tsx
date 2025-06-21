@@ -251,10 +251,10 @@ export default function DriverDashboard() {
         },
         body: JSON.stringify({ 
           amount, 
-          userId: user?.id || 1,
+          userId: user?.id || 7,
           bankAccount: "1234567890",
           bankName: "Bank BCA",
-          accountHolder: user?.name || "Driver"
+          accountHolder: user?.name || "Tatang"
         })
       });
       
