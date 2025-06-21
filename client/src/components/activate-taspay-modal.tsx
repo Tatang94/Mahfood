@@ -60,37 +60,36 @@ export default function ActivateTasPayModal({ isOpen, onClose }: ActivateTasPayM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <Wallet className="w-5 h-5 text-orange-600" />
             Aktifkan TasPay
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="text-center py-4">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-orange-600" />
+        <div className="space-y-3">
+          <div className="text-center py-2">
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Shield className="w-6 h-6 text-orange-600" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Selamat Datang di TasPay!</h3>
-            <p className="text-sm text-gray-600">
-              Buat PIN 6 digit untuk mengamankan dompet digital Anda. 
-              PIN ini akan digunakan untuk setiap transaksi TasPay.
+            <h3 className="font-medium text-gray-900 mb-2">Selamat Datang di TasPay!</h3>
+            <p className="text-xs text-gray-600">
+              Buat PIN 6 digit untuk mengamankan dompet digital Anda.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <Label htmlFor="pin">PIN TasPay (6 digit)</Label>
+              <Label htmlFor="pin" className="text-sm">PIN TasPay (6 digit)</Label>
               <Input
                 id="pin"
                 type="password"
-                placeholder="Masukkan 6 digit angka"
+                placeholder="••••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
-                className="text-center text-lg tracking-widest"
+                className="text-center text-lg tracking-widest h-12"
                 required
               />
               {pin.length > 0 && !isValidPin && (
@@ -99,15 +98,15 @@ export default function ActivateTasPayModal({ isOpen, onClose }: ActivateTasPayM
             </div>
 
             <div>
-              <Label htmlFor="confirmPin">Konfirmasi PIN</Label>
+              <Label htmlFor="confirmPin" className="text-sm">Konfirmasi PIN</Label>
               <Input
                 id="confirmPin"
                 type="password"
-                placeholder="Masukkan ulang PIN"
+                placeholder="••••••"
                 value={confirmPin}
                 onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
-                className="text-center text-lg tracking-widest"
+                className="text-center text-lg tracking-widest h-12"
                 required
               />
               {confirmPin.length > 0 && !pinsMatch && (
@@ -115,15 +114,9 @@ export default function ActivateTasPayModal({ isOpen, onClose }: ActivateTasPayM
               )}
             </div>
 
-            <Alert className="border-blue-200 bg-blue-50">
-              <Shield className="w-4 h-4" />
-              <AlertDescription className="text-blue-800">
-                <strong>Tips Keamanan:</strong>
-                <ul className="mt-2 text-xs space-y-1">
-                  <li>• Jangan gunakan PIN yang mudah ditebak (123456, tanggal lahir)</li>
-                  <li>• Jangan berikan PIN kepada siapapun</li>
-                  <li>• PIN akan ter-enkripsi dengan aman di sistem kami</li>
-                </ul>
+            <Alert className="border-blue-200 bg-blue-50 py-2">
+              <AlertDescription className="text-blue-800 text-xs">
+                <strong>Tips:</strong> Jangan gunakan PIN yang mudah ditebak dan jangan berikan kepada siapapun.
               </AlertDescription>
             </Alert>
 
@@ -135,13 +128,13 @@ export default function ActivateTasPayModal({ isOpen, onClose }: ActivateTasPayM
               </Alert>
             )}
 
-            <div className="flex space-x-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <div className="flex space-x-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1 h-10">
                 Batal
               </Button>
               <Button 
                 type="submit" 
-                className="flex-1 bg-orange-500 hover:bg-orange-600"
+                className="flex-1 bg-orange-500 hover:bg-orange-600 h-10"
                 disabled={!isValidPin || !pinsMatch || activateMutation.isPending}
               >
                 {activateMutation.isPending ? (
@@ -150,7 +143,7 @@ export default function ActivateTasPayModal({ isOpen, onClose }: ActivateTasPayM
                     Mengaktifkan...
                   </>
                 ) : (
-                  "Aktifkan TasPay"
+                  "Aktifkan"
                 )}
               </Button>
             </div>
