@@ -790,9 +790,9 @@ export default function DriverDashboard() {
             </div>
 
             {/* Tips Earnings */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium mb-2">💡 Tips Meningkatkan Pendapatan</h4>
-              <div className="space-y-2 text-sm text-gray-300">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
+              <h4 className="font-medium mb-2 text-gray-700">💡 Tips Meningkatkan Pendapatan</h4>
+              <div className="space-y-2 text-sm text-gray-600">
                 <p>• Tetap online di jam sibuk (11:00-14:00, 18:00-21:00)</p>
                 <p>• Jaga rating dengan pelayanan terbaik</p>
                 <p>• Aktifkan notifikasi untuk pesanan baru</p>
@@ -806,26 +806,26 @@ export default function DriverDashboard() {
         {activeTab === "profil" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-gray-800">Profil Driver</h3>
-              <Edit className="w-5 h-5 text-orange-600" />
+              <h3 className="font-bold text-lg text-gray-700">Profil Driver</h3>
+              <Edit className="w-5 h-5 text-orange-400" />
             </div>
             
             {/* Profile Card */}
-            <div className="bg-gray-800 rounded-lg p-6">
+            <div className="bg-white/95 rounded-lg p-6 shadow-lg border border-orange-100">
               {!editProfile ? (
                 <>
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-gray-900" />
+                    <div className="w-16 h-16 bg-orange-300 rounded-full flex items-center justify-center">
+                      <User className="w-8 h-8 text-gray-700" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-lg">{user?.name || 'Driver'}</h4>
-                      <p className="text-gray-400 text-sm">ID: #{user?.id}</p>
-                      <p className="text-gray-400 text-sm">📱 {user?.phone || profileData.phone || 'Belum diatur'}</p>
+                      <h4 className="font-bold text-lg text-gray-700">{user?.name || 'Driver'}</h4>
+                      <p className="text-gray-500 text-sm">ID: #{user?.id}</p>
+                      <p className="text-gray-500 text-sm">📱 {user?.phone || profileData.phone || 'Belum diatur'}</p>
                       <div className="flex items-center mt-1">
-                        <span className="text-yellow-400 mr-1">⭐</span>
-                        <span className="text-sm">{driverData?.rating || 5.0}</span>
-                        <span className="text-gray-400 text-xs ml-2">
+                        <span className="text-orange-400 mr-1">⭐</span>
+                        <span className="text-sm text-gray-700">{driverData?.rating || 5.0}</span>
+                        <span className="text-gray-500 text-xs ml-2">
                           ({driverData?.totalDeliveries || 0} pengantaran)
                         </span>
                       </div>
@@ -833,16 +833,16 @@ export default function DriverDashboard() {
                   </div>
                   
                   {/* Vehicle Info */}
-                  <div className="bg-gray-700 rounded-lg p-3 mb-4">
-                    <h5 className="font-medium text-sm mb-2">Informasi Kendaraan</h5>
+                  <div className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-100">
+                    <h5 className="font-medium text-sm mb-2 text-gray-700">Informasi Kendaraan</h5>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Jenis</span>
-                        <span>{driverData?.vehicleType || profileData.vehicleType || 'Belum diatur'}</span>
+                        <span className="text-gray-500">Jenis</span>
+                        <span className="text-gray-700">{driverData?.vehicleType || profileData.vehicleType || 'Belum diatur'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Nomor Polisi</span>
-                        <span>{driverData?.vehicleNumber || profileData.vehicleNumber || 'Belum diatur'}</span>
+                        <span className="text-gray-500">Nomor Polisi</span>
+                        <span className="text-gray-700">{driverData?.vehicleNumber || profileData.vehicleNumber || 'Belum diatur'}</span>
                       </div>
                     </div>
                   </div>
@@ -866,35 +866,35 @@ export default function DriverDashboard() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <h4 className="font-medium text-gray-800">Edit Informasi Profil</h4>
+                  <h4 className="font-medium text-gray-700">Edit Informasi Profil</h4>
                   
                   <div className="space-y-3">
                     <div>
-                      <Label className="text-sm text-gray-700">Nama Lengkap</Label>
+                      <Label className="text-sm text-gray-600">Nama Lengkap</Label>
                       <Input
                         value={profileData.name}
                         onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                        className="bg-white border-orange-200 text-gray-800"
+                        className="bg-white border-orange-200 text-gray-700"
                         placeholder="Masukkan nama lengkap"
                       />
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-700">Nomor Telepon</Label>
+                      <Label className="text-sm text-gray-600">Nomor Telepon</Label>
                       <Input
                         value={profileData.phone}
                         onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                        className="bg-white border-orange-200 text-gray-800"
+                        className="bg-white border-orange-200 text-gray-700"
                         placeholder="08123456789"
                       />
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-700">Jenis Kendaraan</Label>
+                      <Label className="text-sm text-gray-600">Jenis Kendaraan</Label>
                       <select 
                         value={profileData.vehicleType}
                         onChange={(e) => setProfileData({...profileData, vehicleType: e.target.value})}
-                        className="w-full p-2 bg-white border border-orange-200 text-gray-800 rounded"
+                        className="w-full p-2 bg-white border border-orange-200 text-gray-700 rounded"
                       >
                         <option value="">Pilih jenis kendaraan</option>
                         <option value="motorcycle">Motor</option>
@@ -903,11 +903,11 @@ export default function DriverDashboard() {
                     </div>
                     
                     <div>
-                      <Label className="text-sm text-gray-700">Nomor Polisi</Label>
+                      <Label className="text-sm text-gray-600">Nomor Polisi</Label>
                       <Input
                         value={profileData.vehicleNumber}
                         onChange={(e) => setProfileData({...profileData, vehicleNumber: e.target.value})}
-                        className="bg-white border-orange-200 text-gray-800"
+                        className="bg-white border-orange-200 text-gray-700"
                         placeholder="B 1234 CD"
                       />
                     </div>
@@ -1023,22 +1023,22 @@ export default function DriverDashboard() {
         {activeTab === "pengaturan" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-gray-800">Pengaturan</h3>
-              <Settings className="w-5 h-5 text-orange-600" />
+              <h3 className="font-bold text-lg text-gray-700">Pengaturan</h3>
+              <Settings className="w-5 h-5 text-orange-400" />
             </div>
             
             {/* Notification Settings */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
               <div className="flex items-center mb-4">
-                <Bell className="w-5 h-5 text-gray-400 mr-2" />
-                <h4 className="font-medium">Notifikasi</h4>
+                <Bell className="w-5 h-5 text-orange-400 mr-2" />
+                <h4 className="font-medium text-gray-700">Notifikasi</h4>
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm">Pesanan Baru</span>
-                    <p className="text-xs text-gray-400">Terima notifikasi pesanan masuk</p>
+                    <span className="text-sm text-gray-700">Pesanan Baru</span>
+                    <p className="text-xs text-gray-500">Terima notifikasi pesanan masuk</p>
                   </div>
                   <Switch 
                     checked={notifications.orderUpdates}
@@ -1050,8 +1050,8 @@ export default function DriverDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm">Update Pendapatan</span>
-                    <p className="text-xs text-gray-400">Notifikasi saldo dan penarikan</p>
+                    <span className="text-sm text-gray-700">Update Pendapatan</span>
+                    <p className="text-xs text-gray-500">Notifikasi saldo dan penarikan</p>
                   </div>
                   <Switch 
                     checked={notifications.earnings}
@@ -1063,8 +1063,8 @@ export default function DriverDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm">Promosi & Bonus</span>
-                    <p className="text-xs text-gray-400">Info promo dan reward khusus</p>
+                    <span className="text-sm text-gray-700">Promosi & Bonus</span>
+                    <p className="text-xs text-gray-500">Info promo dan reward khusus</p>
                   </div>
                   <Switch 
                     checked={notifications.promotions}
@@ -1078,16 +1078,16 @@ export default function DriverDashboard() {
             </div>
 
             {/* Working Hours */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
               <div className="flex items-center mb-4">
-                <Clock className="w-5 h-5 text-gray-400 mr-2" />
-                <h4 className="font-medium">Jam Kerja</h4>
+                <Clock className="w-5 h-5 text-orange-400 mr-2" />
+                <h4 className="font-medium text-gray-700">Jam Kerja</h4>
               </div>
               
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-gray-400">Mulai Kerja</Label>
+                    <Label className="text-xs text-gray-500">Mulai Kerja</Label>
                     <Input
                       type="time"
                       value={workingHours.start}
@@ -1096,11 +1096,11 @@ export default function DriverDashboard() {
                         setWorkingHours(newHours);
                         updateSettingsMutation.mutate({ workingHours: newHours });
                       }}
-                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      className="bg-white border-orange-200 text-gray-700 text-sm"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-400">Selesai Kerja</Label>
+                    <Label className="text-xs text-gray-500">Selesai Kerja</Label>
                     <Input
                       type="time"
                       value={workingHours.end}
@@ -1109,13 +1109,13 @@ export default function DriverDashboard() {
                         setWorkingHours(newHours);
                         updateSettingsMutation.mutate({ workingHours: newHours });
                       }}
-                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      className="bg-white border-orange-200 text-gray-700 text-sm"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-gray-400">Istirahat Mulai</Label>
+                    <Label className="text-xs text-gray-500">Istirahat Mulai</Label>
                     <Input
                       type="time"
                       value={workingHours.breakStart}
@@ -1124,11 +1124,11 @@ export default function DriverDashboard() {
                         setWorkingHours(newHours);
                         updateSettingsMutation.mutate({ workingHours: newHours });
                       }}
-                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      className="bg-white border-orange-200 text-gray-700 text-sm"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-gray-400">Istirahat Selesai</Label>
+                    <Label className="text-xs text-gray-500">Istirahat Selesai</Label>
                     <Input
                       type="time"
                       value={workingHours.breakEnd}
@@ -1137,7 +1137,7 @@ export default function DriverDashboard() {
                         setWorkingHours(newHours);
                         updateSettingsMutation.mutate({ workingHours: newHours });
                       }}
-                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                      className="bg-white border-orange-200 text-gray-700 text-sm"
                     />
                   </div>
                 </div>
@@ -1245,46 +1245,46 @@ export default function DriverDashboard() {
             </div>
 
             {/* Support */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
               <div className="flex items-center mb-4">
-                <HelpCircle className="w-5 h-5 text-gray-400 mr-2" />
-                <h4 className="font-medium">Bantuan & Dukungan</h4>
+                <HelpCircle className="w-5 h-5 text-orange-400 mr-2" />
+                <h4 className="font-medium text-gray-700">Bantuan & Dukungan</h4>
               </div>
               
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 hover:bg-orange-50">
                   <span>Pusat Bantuan</span>
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 hover:bg-orange-50">
                   <span>Chat dengan CS</span>
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 hover:bg-orange-50">
                   <span>Lapor Masalah</span>
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                <Button variant="ghost" className="w-full justify-start text-gray-600 hover:bg-orange-50">
                   <span>Syarat & Ketentuan</span>
                 </Button>
               </div>
             </div>
 
             {/* Status Driver */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium mb-3">Status Driver</h4>
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
+              <h4 className="font-medium mb-3 text-gray-700">Status Driver</h4>
               <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="p-3 bg-gray-700 rounded">
-                  <p className="text-lg font-bold text-green-400">AKTIF</p>
-                  <p className="text-xs text-gray-400">Status Akun</p>
+                <div className="p-3 bg-orange-50 rounded border border-orange-100">
+                  <p className="text-lg font-bold text-orange-500">AKTIF</p>
+                  <p className="text-xs text-gray-500">Status Akun</p>
                 </div>
-                <div className="p-3 bg-gray-700 rounded">
-                  <p className={`text-lg font-bold ${driverOnline ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="p-3 bg-orange-50 rounded border border-orange-100">
+                  <p className={`text-lg font-bold ${driverOnline ? 'text-orange-500' : 'text-gray-400'}`}>
                     {driverOnline ? 'ONLINE' : 'OFFLINE'}
                   </p>
-                  <p className="text-xs text-gray-400">Status Kerja</p>
+                  <p className="text-xs text-gray-500">Status Kerja</p>
                 </div>
               </div>
               
               {/* Status Info */}
-              <div className="mt-3 text-xs text-gray-400 text-center">
+              <div className="mt-3 text-xs text-gray-500 text-center">
                 <p>Status tersinkron otomatis dengan header dan tersimpan real-time</p>
               </div>
             </div>
@@ -1294,7 +1294,7 @@ export default function DriverDashboard() {
               <Button 
                 onClick={logout}
                 variant="destructive" 
-                className="w-full bg-red-600 hover:bg-red-700"
+                className="w-full bg-red-400 hover:bg-red-500 text-white"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Keluar dari Akun
