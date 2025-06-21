@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +26,16 @@ import {
   UserCheck,
   Route,
   Target,
-  Timer
+  Timer,
+  Edit,
+  Bell,
+  Shield,
+  HelpCircle,
+  LogOut,
+  Filter,
+  TrendingUp,
+  Calendar,
+  Star
 } from "lucide-react";
 
 export default function DriverDashboard() {
@@ -32,6 +44,19 @@ export default function DriverDashboard() {
   const queryClient = useQueryClient();
   const [driverOnline, setDriverOnline] = useState(false);
   const [activeTab, setActiveTab] = useState("beranda");
+  const [orderFilter, setOrderFilter] = useState("all");
+  const [editProfile, setEditProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    phone: '',
+    vehicleType: '',
+    vehicleNumber: ''
+  });
+  const [notifications, setNotifications] = useState({
+    orderUpdates: true,
+    earnings: true,
+    promotions: false
+  });
 
   const { data: orders = [] } = useQuery({
     queryKey: ["/api/orders/driver"],
@@ -57,6 +82,45 @@ export default function DriverDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/orders/driver"] });
       toast({ title: "Status pesanan berhasil diperbarui" });
     },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof profileData) => {
+      const response = await fetch('/api/drivers/profile', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update profile');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me"] });
+      toast({ title: "Profil berhasil diperbarui" });
+      setEditProfile(false);
+    }
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const response = await fetch('/api/drivers/withdraw', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ amount })
+      });
+      if (!response.ok) throw new Error('Failed to withdraw');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me"] });
+      toast({ title: "Penarikan saldo berhasil diproses" });
+    }
   });
 
   const activeOrder = orders.find(order => 
@@ -89,6 +153,31 @@ export default function DriverDashboard() {
       case 'pickup': return { text: 'Selesai', next: 'delivered' };
       default: return { text: 'Proses', next: 'confirmed' };
     }
+  };
+
+  const filteredOrders = orders.filter(order => {
+    if (orderFilter === 'all') return true;
+    if (orderFilter === 'completed') return order.status === 'delivered';
+    if (orderFilter === 'cancelled') return order.status === 'cancelled';
+    return true;
+  });
+
+  const todayEarnings = orders
+    .filter(o => o.status === 'delivered' && 
+      new Date(o.deliveredAt || '').toDateString() === new Date().toDateString())
+    .reduce((sum, o) => sum + (o.deliveryFee || 0), 0);
+
+  const handleWithdraw = () => {
+    const amount = driverData?.totalEarnings || 0;
+    if (amount > 0) {
+      withdrawMutation.mutate(amount);
+    } else {
+      toast({ title: "Saldo tidak mencukupi", variant: "destructive" });
+    }
+  };
+
+  const handleProfileSave = () => {
+    updateProfileMutation.mutate(profileData);
   };
 
   return (
@@ -264,39 +353,88 @@ export default function DriverDashboard() {
         {/* Tab Order */}
         {activeTab === "order" && (
           <div className="space-y-4">
-            <h3 className="font-bold text-lg text-white">Riwayat Pesanan</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-white">Riwayat Pesanan</h3>
+              <Filter className="w-5 h-5 text-gray-400" />
+            </div>
             
             {/* Filter Status */}
             <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" className="border-gray-600 text-gray-300 text-xs">Semua</Button>
-              <Button variant="outline" className="border-gray-600 text-gray-300 text-xs">Selesai</Button>
-              <Button variant="outline" className="border-gray-600 text-gray-300 text-xs">Dibatalkan</Button>
+              <Button 
+                variant={orderFilter === 'all' ? 'default' : 'outline'} 
+                className={`text-xs ${orderFilter === 'all' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                onClick={() => setOrderFilter('all')}
+              >
+                Semua ({orders.length})
+              </Button>
+              <Button 
+                variant={orderFilter === 'completed' ? 'default' : 'outline'} 
+                className={`text-xs ${orderFilter === 'completed' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                onClick={() => setOrderFilter('completed')}
+              >
+                Selesai ({orders.filter(o => o.status === 'delivered').length})
+              </Button>
+              <Button 
+                variant={orderFilter === 'cancelled' ? 'default' : 'outline'} 
+                className={`text-xs ${orderFilter === 'cancelled' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                onClick={() => setOrderFilter('cancelled')}
+              >
+                Dibatalkan ({orders.filter(o => o.status === 'cancelled').length})
+              </Button>
+            </div>
+
+            {/* Statistics */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-yellow-400">{orders.filter(o => o.status === 'delivered').length}</p>
+                <p className="text-xs text-gray-400">Total Selesai</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-3 text-center">
+                <p className="text-2xl font-bold text-green-400">{formatCurrency(todayEarnings)}</p>
+                <p className="text-xs text-gray-400">Hari Ini</p>
+              </div>
             </div>
 
             {/* List Order */}
             <div className="space-y-3">
-              {orders.slice(0, 5).map((order) => (
+              {filteredOrders.slice(0, 10).map((order) => (
                 <div key={order.id} className="bg-gray-800 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Order #{order.id}</span>
                     <div className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(order.status)} text-gray-900`}>
-                      {order.status}
+                      {order.status === 'delivered' ? 'SELESAI' :
+                       order.status === 'cancelled' ? 'DIBATALKAN' :
+                       order.status.toUpperCase()}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mb-2">{order.deliveryAddress}</p>
+                  <p className="text-xs text-gray-400 mb-2">📍 {order.deliveryAddress}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-yellow-400 font-bold">{formatCurrency(order.deliveryFee)}</span>
-                    <span className="text-xs text-gray-400">
-                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : ''}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-yellow-400 font-bold">{formatCurrency(order.deliveryFee || 0)}</span>
+                      {order.status === 'delivered' && (
+                        <Star className="w-3 h-3 text-yellow-400" />
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : ''}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}
               
-              {orders.length === 0 && (
+              {filteredOrders.length === 0 && (
                 <div className="bg-gray-800 rounded-lg p-8 text-center">
                   <Package className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-400">Belum ada riwayat pesanan</p>
+                  <p className="text-gray-400">
+                    {orderFilter === 'all' ? 'Belum ada riwayat pesanan' :
+                     orderFilter === 'completed' ? 'Belum ada pesanan selesai' :
+                     'Belum ada pesanan dibatalkan'}
+                  </p>
                 </div>
               )}
             </div>
@@ -306,7 +444,10 @@ export default function DriverDashboard() {
         {/* Tab Dompet */}
         {activeTab === "dompet" && (
           <div className="space-y-4">
-            <h3 className="font-bold text-lg text-white">Dompet Driver</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-white">Dompet Driver</h3>
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
             
             {/* Saldo */}
             <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg p-6 text-gray-900">
@@ -314,37 +455,67 @@ export default function DriverDashboard() {
                 <p className="text-sm font-medium opacity-80">TOTAL PENDAPATAN</p>
                 <p className="text-3xl font-bold">{formatCurrency(driverData?.totalEarnings || 0)}</p>
                 <p className="text-xs opacity-70 mt-1">Saldo dapat dicairkan</p>
+                <div className="flex items-center justify-center mt-2">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                  <span className="text-xs font-medium">Aktif</span>
+                </div>
               </div>
             </div>
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-4">
-              <Button className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col">
+              <Button 
+                onClick={handleWithdraw}
+                disabled={withdrawMutation.isPending || (driverData?.totalEarnings || 0) <= 0}
+                className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700"
+              >
                 <DollarSign className="w-6 h-6 mb-1" />
-                <span className="text-xs">Tarik Saldo</span>
+                <span className="text-xs">
+                  {withdrawMutation.isPending ? 'Memproses...' : 'Tarik Saldo'}
+                </span>
               </Button>
-              <Button className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col">
+              <Button className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700">
                 <Clock className="w-6 h-6 mb-1" />
                 <span className="text-xs">Riwayat</span>
               </Button>
             </div>
 
-            {/* Statistik */}
+            {/* Statistik Mingguan */}
             <div className="bg-gray-800 rounded-lg p-4">
-              <h4 className="font-medium mb-3">Statistik Hari Ini</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <h4 className="font-medium mb-3 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Statistik 7 Hari Terakhir
+              </h4>
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-400">
+                  <p className="text-xl font-bold text-yellow-400">
                     {orders.filter(o => o.status === 'delivered').length}
                   </p>
-                  <p className="text-xs text-gray-400">Pesanan Selesai</p>
+                  <p className="text-xs text-gray-400">Total Order</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-400">
-                    {formatCurrency(orders.filter(o => o.status === 'delivered').reduce((sum, o) => sum + (o.deliveryFee || 0), 0))}
+                  <p className="text-xl font-bold text-green-400">
+                    {formatCurrency(todayEarnings)}
                   </p>
-                  <p className="text-xs text-gray-400">Pendapatan Hari Ini</p>
+                  <p className="text-xs text-gray-400">Hari Ini</p>
                 </div>
+                <div className="text-center">
+                  <p className="text-xl font-bold text-blue-400">
+                    {orders.filter(o => o.status === 'delivered').length > 0 ? 
+                      (driverData?.rating || 5.0) : '5.0'}
+                  </p>
+                  <p className="text-xs text-gray-400">Rating</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tips Earnings */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <h4 className="font-medium mb-2">💡 Tips Meningkatkan Pendapatan</h4>
+              <div className="space-y-2 text-sm text-gray-300">
+                <p>• Tetap online di jam sibuk (11:00-14:00, 18:00-21:00)</p>
+                <p>• Jaga rating dengan pelayanan terbaik</p>
+                <p>• Aktifkan notifikasi untuk pesanan baru</p>
               </div>
             </div>
           </div>
@@ -353,54 +524,133 @@ export default function DriverDashboard() {
         {/* Tab Profil */}
         {activeTab === "profil" && (
           <div className="space-y-4">
-            <h3 className="font-bold text-lg text-white">Profil Driver</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-white">Profil Driver</h3>
+              <Edit className="w-5 h-5 text-gray-400" />
+            </div>
             
             {/* Profile Card */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <User className="w-8 h-8 text-gray-900" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-lg">{user?.name || 'Driver'}</h4>
-                  <p className="text-gray-400 text-sm">ID: #{user?.id}</p>
-                  <div className="flex items-center mt-1">
-                    <span className="text-yellow-400 mr-1">⭐</span>
-                    <span className="text-sm">{driverData?.rating || 5.0}</span>
-                    <span className="text-gray-400 text-xs ml-2">
-                      ({driverData?.totalDeliveries || 0} pengantaran)
-                    </span>
+              {!editProfile ? (
+                <>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
+                      <User className="w-8 h-8 text-gray-900" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-lg">{user?.name || 'Driver'}</h4>
+                      <p className="text-gray-400 text-sm">ID: #{user?.id}</p>
+                      <div className="flex items-center mt-1">
+                        <span className="text-yellow-400 mr-1">⭐</span>
+                        <span className="text-sm">{driverData?.rating || 5.0}</span>
+                        <span className="text-gray-400 text-xs ml-2">
+                          ({driverData?.totalDeliveries || 0} pengantaran)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => setEditProfile(true)}
+                    variant="outline" 
+                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profil
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <h4 className="font-medium">Edit Informasi Profil</h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm text-gray-300">Nama Lengkap</Label>
+                      <Input
+                        value={profileData.name}
+                        onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm text-gray-300">Nomor Telepon</Label>
+                      <Input
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="08123456789"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm text-gray-300">Jenis Kendaraan</Label>
+                      <Input
+                        value={profileData.vehicleType}
+                        onChange={(e) => setProfileData({...profileData, vehicleType: e.target.value})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="Motor/Mobil"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm text-gray-300">Nomor Polisi</Label>
+                      <Input
+                        value={profileData.vehicleNumber}
+                        onChange={(e) => setProfileData({...profileData, vehicleNumber: e.target.value})}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="B 1234 CD"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-2">
+                    <Button 
+                      onClick={() => setEditProfile(false)}
+                      variant="outline" 
+                      className="flex-1 border-gray-600 text-gray-300"
+                    >
+                      Batal
+                    </Button>
+                    <Button 
+                      onClick={handleProfileSave}
+                      disabled={updateProfileMutation.isPending}
+                      className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                    >
+                      {updateProfileMutation.isPending ? 'Menyimpan...' : 'Simpan'}
+                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              <Button variant="outline" className="w-full border-gray-600 text-gray-300">
-                Edit Profil
-              </Button>
+              )}
             </div>
 
-            {/* Menu Items */}
+            {/* Status & Verification */}
             <div className="space-y-2">
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Car className="w-5 h-5 text-gray-400" />
-                  <span>Informasi Kendaraan</span>
+              <div className="bg-gray-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">Status Verifikasi</span>
+                  <CheckCircle className="w-5 h-5 text-green-400" />
                 </div>
-                <span className="text-gray-400">→</span>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">KTP</span>
+                    <span className="text-green-400">✓ Terverifikasi</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">SIM</span>
+                    <span className="text-green-400">✓ Terverifikasi</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">STNK</span>
+                    <span className="text-green-400">✓ Terverifikasi</span>
+                  </div>
+                </div>
               </div>
               
               <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Phone className="w-5 h-5 text-gray-400" />
                   <span>Kontak Darurat</span>
-                </div>
-                <span className="text-gray-400">→</span>
-              </div>
-              
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
-                  <span>Verifikasi Dokumen</span>
                 </div>
                 <span className="text-gray-400">→</span>
               </div>
@@ -411,22 +661,52 @@ export default function DriverDashboard() {
         {/* Tab Pengaturan */}
         {activeTab === "pengaturan" && (
           <div className="space-y-4">
-            <h3 className="font-bold text-lg text-white">Pengaturan</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg text-white">Pengaturan</h3>
+              <Settings className="w-5 h-5 text-gray-400" />
+            </div>
             
-            {/* Quick Settings */}
+            {/* Notification Settings */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center mb-4">
+                <Bell className="w-5 h-5 text-gray-400 mr-2" />
+                <h4 className="font-medium">Notifikasi</h4>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Pesanan Baru</span>
+                  <Switch 
+                    checked={notifications.orderUpdates}
+                    onCheckedChange={(checked) => setNotifications({...notifications, orderUpdates: checked})}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Update Pendapatan</span>
+                  <Switch 
+                    checked={notifications.earnings}
+                    onCheckedChange={(checked) => setNotifications({...notifications, earnings: checked})}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Promosi & Bonus</span>
+                  <Switch 
+                    checked={notifications.promotions}
+                    onCheckedChange={(checked) => setNotifications({...notifications, promotions: checked})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Other Settings */}
             <div className="space-y-2">
               <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Settings className="w-5 h-5 text-gray-400" />
-                  <span>Notifikasi</span>
-                </div>
-                <span className="text-gray-400">→</span>
-              </div>
-              
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
                   <MapPin className="w-5 h-5 text-gray-400" />
-                  <span>Lokasi & Privasi</span>
+                  <div>
+                    <span className="block">Lokasi & Privasi</span>
+                    <span className="text-xs text-gray-400">Kelola akses lokasi</span>
+                  </div>
                 </div>
                 <span className="text-gray-400">→</span>
               </div>
@@ -434,17 +714,51 @@ export default function DriverDashboard() {
               <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Clock className="w-5 h-5 text-gray-400" />
-                  <span>Jam Kerja</span>
+                  <div>
+                    <span className="block">Jam Kerja</span>
+                    <span className="text-xs text-gray-400">Atur jadwal online</span>
+                  </div>
                 </div>
                 <span className="text-gray-400">→</span>
               </div>
               
               <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <User className="w-5 h-5 text-gray-400" />
-                  <span>Bantuan & Dukungan</span>
+                  <Shield className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <span className="block">Keamanan</span>
+                    <span className="text-xs text-gray-400">PIN & keamanan akun</span>
+                  </div>
                 </div>
                 <span className="text-gray-400">→</span>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <HelpCircle className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <span className="block">Bantuan & Dukungan</span>
+                    <span className="text-xs text-gray-400">FAQ, kontak support</span>
+                  </div>
+                </div>
+                <span className="text-gray-400">→</span>
+              </div>
+            </div>
+
+            {/* Driver Stats */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <h4 className="font-medium mb-3">Status Driver</h4>
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <p className="text-lg font-bold text-green-400">AKTIF</p>
+                  <p className="text-xs text-gray-400">Status Akun</p>
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-yellow-400">
+                    {driverOnline ? 'ONLINE' : 'OFFLINE'}
+                  </p>
+                  <p className="text-xs text-gray-400">Status Kerja</p>
+                </div>
               </div>
             </div>
 
@@ -455,6 +769,7 @@ export default function DriverDashboard() {
                 variant="destructive" 
                 className="w-full bg-red-600 hover:bg-red-700"
               >
+                <LogOut className="w-4 h-4 mr-2" />
                 Keluar dari Akun
               </Button>
             </div>
@@ -463,6 +778,7 @@ export default function DriverDashboard() {
             <div className="text-center pt-4">
               <p className="text-xs text-gray-500">FoodieID Driver v1.0.0</p>
               <p className="text-xs text-gray-500">© 2025 TasFood Indonesia</p>
+              <p className="text-xs text-gray-600 mt-1">Build 20250621</p>
             </div>
           </div>
         )}
