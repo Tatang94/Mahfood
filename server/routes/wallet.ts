@@ -3,6 +3,8 @@ import { db } from "../db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { authenticateToken } from "./auth";
+import { PayDisiniService } from "../services/payDisiniService";
+import { userWallets, walletTransactions } from "@shared/schema";
 
 // Define wallet and transaction schemas
 const userWallets = {
@@ -81,14 +83,29 @@ export function registerWalletRoutes(app: Express) {
     }
   });
 
-  // Top up wallet
-  app.post('/api/wallet/topup', authenticateToken, async (req: any, res) => {
+  // Get available payment methods for top up
+  app.get('/api/wallet/payment-methods', async (req, res) => {
+    try {
+      const payDisini = new PayDisiniService();
+      const methods = payDisini.getPaymentMethods();
+      res.json(methods);
+    } catch (error) {
+      res.status(500).json({ message: "Gagal mengambil metode pembayaran" });
+    }
+  });
+
+  // Create top up transaction
+  app.post('/api/wallet/topup/create', authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.userId;
-      const { amount, pin } = req.body;
+      const { amount, paymentMethod, pin } = req.body;
       
-      if (!amount || amount <= 0) {
-        return res.status(400).json({ message: "Jumlah top up tidak valid" });
+      if (!amount || amount < 10000) {
+        return res.status(400).json({ message: "Minimum top up Rp 10.000" });
+      }
+      
+      if (!paymentMethod) {
+        return res.status(400).json({ message: "Pilih metode pembayaran" });
       }
       
       if (!pin) {
@@ -96,17 +113,15 @@ export function registerWalletRoutes(app: Express) {
       }
       
       // Get wallet
-      const walletResult = await db.execute(`
-        SELECT id, balance, pin, is_active 
-        FROM user_wallets 
-        WHERE user_id = $1
-      `, [userId]);
+      const walletResult = await db.select()
+        .from(userWallets)
+        .where(eq(userWallets.userId, userId));
       
-      if (walletResult.rows.length === 0 || !walletResult.rows[0].is_active) {
+      if (walletResult.length === 0 || !walletResult[0].isActive) {
         return res.status(400).json({ message: "TasPay belum aktif" });
       }
       
-      const wallet = walletResult.rows[0];
+      const wallet = walletResult[0];
       
       // Verify PIN
       const validPin = await bcrypt.compare(pin, wallet.pin);
@@ -114,27 +129,110 @@ export function registerWalletRoutes(app: Express) {
         return res.status(401).json({ message: "PIN salah" });
       }
       
-      // Update balance
-      const newBalance = wallet.balance + amount;
-      await db.execute(`
-        UPDATE user_wallets 
-        SET balance = $1, updated_at = NOW()
-        WHERE id = $2
-      `, [newBalance, wallet.id]);
+      // Create PayDisini transaction
+      const payDisini = new PayDisiniService();
+      const transaction = await payDisini.createTransaction(
+        amount,
+        paymentMethod,
+        `Top up TasPay - User ${userId}`
+      );
       
-      // Record transaction
-      await db.execute(`
-        INSERT INTO wallet_transactions (wallet_id, type, amount, description, status)
-        VALUES ($1, 'topup', $2, 'Top up saldo TasPay', 'completed')
-      `, [wallet.id, amount]);
+      if (!transaction.success) {
+        return res.status(400).json({ message: transaction.msg || "Gagal membuat transaksi" });
+      }
       
-      res.json({ 
-        message: "Top up berhasil",
-        balance: newBalance 
+      // Record transaction in database
+      await db.insert(walletTransactions).values({
+        walletId: wallet.id,
+        type: 'topup',
+        amount: amount,
+        description: `Top up TasPay via ${transaction.data.service_name}`,
+        status: 'pending',
+        paymentMethod: paymentMethod,
+        externalTransactionId: transaction.data.unique_code
+      });
+      
+      res.json({
+        success: true,
+        transaction: {
+          unique_code: transaction.data.unique_code,
+          amount: transaction.data.amount,
+          fee: transaction.data.fee,
+          service_name: transaction.data.service_name,
+          qr_url: transaction.data.qr_url,
+          checkout_url: transaction.data.checkout_url_v2,
+          expired: transaction.data.expired
+        }
       });
     } catch (error) {
+      console.error('Top up error:', error);
+      res.status(500).json({ message: "Gagal membuat transaksi top up" });
+    }
+  });
+
+  // Check transaction status and update wallet
+  app.post('/api/wallet/topup/check', authenticateToken, async (req: any, res) => {
+    try {
+      const { uniqueCode } = req.body;
       
-      res.status(500).json({ message: "Gagal melakukan top up" });
+      if (!uniqueCode) {
+        return res.status(400).json({ message: "Kode transaksi diperlukan" });
+      }
+      
+      // Check status from PayDisini
+      const payDisini = new PayDisiniService();
+      const status = await payDisini.checkTransactionStatus(uniqueCode);
+      
+      if (status.success && status.data.status === 'Success') {
+        // Get transaction from database
+        const transactionResult = await db.select()
+          .from(walletTransactions)
+          .where(eq(walletTransactions.externalTransactionId, uniqueCode));
+          
+        if (transactionResult.length === 0) {
+          return res.status(404).json({ message: "Transaksi tidak ditemukan" });
+        }
+        
+        const transaction = transactionResult[0];
+        
+        if (transaction.status === 'completed') {
+          return res.json({ success: true, message: "Transaksi sudah berhasil" });
+        }
+        
+        // Update wallet balance
+        await db.execute(`
+          UPDATE user_wallets 
+          SET balance = balance + $1, updated_at = NOW()
+          WHERE id = $2
+        `, [transaction.amount, transaction.walletId]);
+        
+        // Update transaction status
+        await db.execute(`
+          UPDATE wallet_transactions 
+          SET status = 'completed'
+          WHERE external_transaction_id = $1
+        `, [uniqueCode]);
+        
+        // Get updated wallet balance
+        const walletResult = await db.select()
+          .from(userWallets)
+          .where(eq(userWallets.id, transaction.walletId));
+        
+        res.json({
+          success: true,
+          message: "Top up berhasil!",
+          balance: walletResult[0].balance
+        });
+      } else {
+        res.json({
+          success: false,
+          status: status.data?.status || 'Pending',
+          message: "Transaksi belum berhasil"
+        });
+      }
+    } catch (error) {
+      console.error('Check transaction error:', error);
+      res.status(500).json({ message: "Gagal mengecek status transaksi" });
     }
   });
 

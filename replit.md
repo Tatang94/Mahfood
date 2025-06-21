@@ -92,6 +92,13 @@ The application is configured for multiple deployment targets:
   - Verified all dependencies are properly installed
   - Application running successfully on Replit
 
+- January 15, 2025: Integrated PayDisini payment gateway for TasPay top up
+  - Added PayDisini service with API ID 3246 and proper authentication
+  - Created complete wallet system with user_wallets and wallet_transactions tables
+  - Implemented top up functionality with multiple payment methods (QRIS, e-wallets, bank transfers)
+  - Added TopUpModal component with real-time transaction status checking
+  - Integrated top up feature into customer dashboard payment section
+
 ## Changelog
 
 - June 21, 2025. Initial setup

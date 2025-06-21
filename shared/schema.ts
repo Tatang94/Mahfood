@@ -115,6 +115,29 @@ export const cartItems = pgTable("cart_items", {
   sessionId: text("session_id").notNull(),
 });
 
+export const userWallets = pgTable("user_wallets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  balance: integer("balance").notNull().default(0),
+  pin: text("pin").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: serial("id").primaryKey(),
+  walletId: integer("wallet_id").notNull().references(() => userWallets.id),
+  orderId: integer("order_id").references(() => orders.id),
+  type: text("type").notNull(), // topup, payment, refund
+  amount: integer("amount").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  paymentMethod: text("payment_method"), // paydisini service code
+  externalTransactionId: text("external_transaction_id"), // PayDisini unique_code
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
 });
@@ -161,6 +184,17 @@ export const insertDriverEarningSchema = createInsertSchema(driverEarnings).omit
   createdAt: true,
 });
 
+export const insertUserWalletSchema = createInsertSchema(userWallets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Category = typeof categories.$inferSelect;
 export type FoodItem = typeof foodItems.$inferSelect;
 export type CartItem = typeof cartItems.$inferSelect;
@@ -171,6 +205,8 @@ export type OrderItem = typeof orderItems.$inferSelect;
 export type Driver = typeof drivers.$inferSelect;
 export type Restaurant = typeof restaurants.$inferSelect;
 export type DriverEarning = typeof driverEarnings.$inferSelect;
+export type UserWallet = typeof userWallets.$inferSelect;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type InsertFoodItem = z.infer<typeof insertFoodItemSchema>;
@@ -182,3 +218,5 @@ export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 export type InsertDriver = z.infer<typeof insertDriverSchema>;
 export type InsertRestaurant = z.infer<typeof insertRestaurantSchema>;
 export type InsertDriverEarning = z.infer<typeof insertDriverEarningSchema>;
+export type InsertUserWallet = z.infer<typeof insertUserWalletSchema>;
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import TopUpModal from "@/components/topup-modal";
 import { 
   Search,
   Wallet,
@@ -53,6 +54,7 @@ export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState("beranda");
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -86,8 +88,20 @@ export default function CustomerDashboard() {
   const completedOrders = orders.filter(o => o.status === 'delivered');
   const totalSpent = completedOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   
-  // Saldo mulai dari 0, user perlu top up
-  const walletBalance = 0;
+  // Fetch wallet balance
+  const { data: walletData } = useQuery({
+    queryKey: ["/api/wallet", user?.id],
+    queryFn: async () => {
+      const response = await fetch("/api/wallet", {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!response.ok) throw new Error("Gagal mengambil data wallet");
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  const walletBalance = walletData?.balance || 0;
   
   // Poin loyalitas berdasarkan total pembelian yang completed (1 poin per 10rb)
   const loyaltyPoints = Math.floor(totalSpent / 10000);
@@ -558,7 +572,65 @@ export default function CustomerDashboard() {
             )}
           </div>
         )}
+
+        {activeTab === "pembayaran" && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Metode Pembayaran</h3>
+            
+            <div className="space-y-4">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-orange-100 p-2 rounded-full">
+                        <Wallet className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium">TasPay</span>
+                        <p className="text-sm text-gray-600">
+                          Saldo: Rp {walletBalance.toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      onClick={() => setIsTopUpModalOpen(true)}
+                    >
+                      Top Up
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <Package className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium">Bayar di Tempat (COD)</span>
+                        <p className="text-sm text-gray-600">Bayar tunai saat pengiriman</p>
+                      </div>
+                    </div>
+                    <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                      Tersedia
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Top Up Modal */}
+      <TopUpModal 
+        isOpen={isTopUpModalOpen} 
+        onClose={() => setIsTopUpModalOpen(false)} 
+      />
 
       {/* Bottom Navigation */}
       <div className="bottom-nav" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999, background: 'white', borderTop: '1px solid #e5e7eb' }}>
