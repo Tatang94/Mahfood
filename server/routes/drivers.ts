@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { db } from "../db";
-import { drivers, users, driverEarnings, orders, userWallets, walletTransactions } from "@shared/schema";
+import { drivers, users, driverEarnings, orders, userWallets, walletTransactions, driverWithdrawals } from "@shared/schema";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 

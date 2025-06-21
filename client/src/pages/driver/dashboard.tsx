@@ -74,6 +74,7 @@ export default function DriverDashboard() {
   const [walletPin, setWalletPin] = useState('');
   const [showWalletHistory, setShowWalletHistory] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [showChangePinModal, setShowChangePinModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [pinData, setPinData] = useState({ currentPin: '', newPin: '', confirmPin: '' });
@@ -246,18 +247,40 @@ export default function DriverDashboard() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'demo-token'}`
         },
-        body: JSON.stringify({ amount, userId: user?.id })
+        body: JSON.stringify({ 
+          amount, 
+          userId: user?.id || 1,
+          bankAccount: "1234567890",
+          bankName: "Bank BCA",
+          accountHolder: user?.name || "Driver"
+        })
       });
-      if (!response.ok) throw new Error('Failed to withdraw');
-      return response.json();
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to withdraw');
+      }
+      
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/drivers/me", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/drivers/wallet", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/drivers/earnings/stats", user?.id] });
-      toast({ title: "Penarikan saldo berhasil diproses" });
+      toast({ 
+        title: "Penarikan Berhasil", 
+        description: `${data.message} - ID: ${data.withdrawalId}` 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Gagal Menarik Saldo", 
+        description: error.message || "Terjadi kesalahan saat memproses penarikan",
+        variant: "destructive" 
+      });
     }
   });
 
@@ -664,22 +687,13 @@ export default function DriverDashboard() {
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-4">
               <Button 
-                onClick={() => {
-                  if (!withdrawAmount) {
-                    setWithdrawAmount(String(driverData?.totalEarnings || 0));
-                  }
-                  const amount = Number(withdrawAmount);
-                  if (amount > 0) {
-                    withdrawMutation.mutate(amount);
-                    setWithdrawAmount('');
-                  }
-                }}
-                disabled={withdrawMutation.isPending || (driverData?.totalEarnings || 0) <= 0}
+                onClick={() => setShowWithdrawForm(!showWithdrawForm)}
+                disabled={(driverData?.totalEarnings || 0) <= 0}
                 className="bg-white/90 text-gray-700 border border-orange-100 h-16 flex flex-col hover:bg-orange-50 shadow-lg"
               >
                 <DollarSign className="w-6 h-6 mb-1 text-orange-400" />
                 <span className="text-xs">
-                  {withdrawMutation.isPending ? 'Memproses...' : 'Tarik Saldo'}
+                  Tarik Saldo
                 </span>
               </Button>
               <Button 
@@ -691,20 +705,62 @@ export default function DriverDashboard() {
               </Button>
             </div>
 
-            {/* Withdraw Amount Input */}
-            {withdrawAmount !== '' && (
+            {/* Withdraw Form */}
+            {showWithdrawForm && (
               <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
-                <Label className="text-sm text-gray-600">Jumlah Penarikan</Label>
-                <Input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="bg-white border-orange-200 text-gray-700 mt-2"
-                  placeholder="Masukkan jumlah"
-                />
-                <div className="flex space-x-2 mt-3">
+                <h4 className="font-medium text-gray-700 mb-3">Formulir Penarikan Saldo</h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-gray-600">Jumlah Penarikan</Label>
+                    <Input
+                      type="number"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
+                      className="bg-white border-orange-200 text-gray-700 mt-1"
+                      placeholder="Minimal Rp 50.000"
+                      min="50000"
+                      max={driverData?.totalEarnings || 0}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Saldo tersedia: {formatCurrency(driverData?.totalEarnings || 0)}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-orange-200 text-orange-500 text-xs"
+                      onClick={() => setWithdrawAmount('100000')}
+                    >
+                      100K
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-orange-200 text-orange-500 text-xs"
+                      onClick={() => setWithdrawAmount('500000')}
+                    >
+                      500K
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-orange-200 text-orange-500 text-xs"
+                      onClick={() => setWithdrawAmount(String(driverData?.totalEarnings || 0))}
+                    >
+                      Semua
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2 mt-4">
                   <Button 
-                    onClick={() => setWithdrawAmount('')}
+                    onClick={() => {
+                      setShowWithdrawForm(false);
+                      setWithdrawAmount('');
+                    }}
                     variant="outline" 
                     className="flex-1 border-orange-200 text-gray-600"
                   >
@@ -713,15 +769,22 @@ export default function DriverDashboard() {
                   <Button 
                     onClick={() => {
                       const amount = Number(withdrawAmount);
-                      if (amount > 0) {
+                      if (amount >= 50000 && amount <= (driverData?.totalEarnings || 0)) {
                         withdrawMutation.mutate(amount);
                         setWithdrawAmount('');
+                        setShowWithdrawForm(false);
+                      } else {
+                        toast({ 
+                          title: "Jumlah tidak valid", 
+                          description: "Minimal Rp 50.000 dan tidak boleh melebihi saldo",
+                          variant: "destructive" 
+                        });
                       }
                     }}
-                    disabled={withdrawMutation.isPending}
+                    disabled={withdrawMutation.isPending || !withdrawAmount || Number(withdrawAmount) < 50000}
                     className="flex-1 bg-orange-300 hover:bg-orange-400 text-gray-700"
                   >
-                    Konfirmasi
+                    {withdrawMutation.isPending ? 'Memproses...' : 'Tarik Saldo'}
                   </Button>
                 </div>
               </div>

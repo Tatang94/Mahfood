@@ -100,6 +100,19 @@ export const driverEarnings = pgTable("driver_earnings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const driverWithdrawals = pgTable("driver_withdrawals", {
+  id: serial("id").primaryKey(),
+  driverId: integer("driver_id").notNull().references(() => drivers.id),
+  amount: integer("amount").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, completed
+  bankAccount: text("bank_account"),
+  bankName: text("bank_name"),
+  accountHolder: text("account_holder"),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  notes: text("notes"),
+});
+
 export const orderItems = pgTable("order_items", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id").notNull(),
