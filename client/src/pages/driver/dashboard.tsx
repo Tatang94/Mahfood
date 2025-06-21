@@ -58,14 +58,45 @@ export default function DriverDashboard() {
     promotions: false
   });
 
+  const [workingHours, setWorkingHours] = useState({
+    start: '06:00',
+    end: '22:00',
+    breakStart: '12:00',
+    breakEnd: '13:00'
+  });
+
+  const [locationSettings, setLocationSettings] = useState({
+    shareLocation: true,
+    preciseLocation: true,
+    workingRadius: 5
+  });
+
+  const [walletPin, setWalletPin] = useState('');
+  const [showWalletHistory, setShowWalletHistory] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+
   const { data: orders = [] } = useQuery({
-    queryKey: ["/api/orders/driver"],
-    queryFn: () => fetch("/api/orders/driver").then(res => res.json()),
+    queryKey: ["/api/orders/driver", user?.id],
+    queryFn: () => fetch(`/api/orders/driver?userId=${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
   const { data: driverData } = useQuery({
-    queryKey: ["/api/drivers/me"],
-    queryFn: () => fetch("/api/drivers/me").then(res => res.json()),
+    queryKey: ["/api/drivers/me", user?.id],
+    queryFn: () => fetch(`/api/drivers/me?userId=${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id
+  });
+
+  const { data: walletData } = useQuery({
+    queryKey: ["/api/drivers/wallet", user?.id],
+    queryFn: () => fetch(`/api/drivers/wallet?userId=${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id
+  });
+
+  const { data: earningsStats } = useQuery({
+    queryKey: ["/api/drivers/earnings/stats", user?.id],
+    queryFn: () => fetch(`/api/drivers/earnings/stats?userId=${user?.id}`).then(res => res.json()),
+    enabled: !!user?.id
   });
 
   const updateOrderMutation = useMutation({
@@ -92,15 +123,33 @@ export default function DriverDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, userId: user?.id })
       });
       if (!response.ok) throw new Error('Failed to update profile');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me", user?.id] });
       toast({ title: "Profil berhasil diperbarui" });
       setEditProfile(false);
+    }
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: any) => {
+      const response = await fetch('/api/drivers/settings', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ ...settings, userId: user?.id })
+      });
+      if (!response.ok) throw new Error('Failed to update settings');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Pengaturan berhasil diperbarui" });
     }
   });
 
@@ -112,13 +161,15 @@ export default function DriverDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ amount })
+        body: JSON.stringify({ amount, userId: user?.id })
       });
       if (!response.ok) throw new Error('Failed to withdraw');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/me", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/wallet", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers/earnings/stats", user?.id] });
       toast({ title: "Penarikan saldo berhasil diproses" });
     }
   });
@@ -465,7 +516,16 @@ export default function DriverDashboard() {
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-4">
               <Button 
-                onClick={handleWithdraw}
+                onClick={() => {
+                  if (!withdrawAmount) {
+                    setWithdrawAmount(String(driverData?.totalEarnings || 0));
+                  }
+                  const amount = Number(withdrawAmount);
+                  if (amount > 0) {
+                    withdrawMutation.mutate(amount);
+                    setWithdrawAmount('');
+                  }
+                }}
                 disabled={withdrawMutation.isPending || (driverData?.totalEarnings || 0) <= 0}
                 className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700"
               >
@@ -474,37 +534,109 @@ export default function DriverDashboard() {
                   {withdrawMutation.isPending ? 'Memproses...' : 'Tarik Saldo'}
                 </span>
               </Button>
-              <Button className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700">
+              <Button 
+                onClick={() => setShowWalletHistory(!showWalletHistory)}
+                className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700"
+              >
                 <Clock className="w-6 h-6 mb-1" />
                 <span className="text-xs">Riwayat</span>
               </Button>
             </div>
 
+            {/* Withdraw Amount Input */}
+            {withdrawAmount !== '' && (
+              <div className="bg-gray-800 rounded-lg p-4">
+                <Label className="text-sm text-gray-300">Jumlah Penarikan</Label>
+                <Input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white mt-2"
+                  placeholder="Masukkan jumlah"
+                />
+                <div className="flex space-x-2 mt-3">
+                  <Button 
+                    onClick={() => setWithdrawAmount('')}
+                    variant="outline" 
+                    className="flex-1 border-gray-600 text-gray-300"
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      const amount = Number(withdrawAmount);
+                      if (amount > 0) {
+                        withdrawMutation.mutate(amount);
+                        setWithdrawAmount('');
+                      }
+                    }}
+                    disabled={withdrawMutation.isPending}
+                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                  >
+                    Konfirmasi
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Transaction History */}
+            {showWalletHistory && (
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-medium mb-3">Riwayat Transaksi</h4>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {earningsStats?.transactions?.map((transaction: any, index: number) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {transaction.type === 'delivery' ? 'Pengantaran' :
+                           transaction.type === 'bonus' ? 'Bonus' :
+                           transaction.type === 'withdrawal' ? 'Penarikan' : 'Transaksi'}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('id-ID') : ''}
+                        </p>
+                      </div>
+                      <span className={`font-bold ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
+                      </span>
+                    </div>
+                  )) || (
+                    <p className="text-gray-400 text-center py-4">Belum ada riwayat transaksi</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Statistik Mingguan */}
             <div className="bg-gray-800 rounded-lg p-4">
               <h4 className="font-medium mb-3 flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
-                Statistik 7 Hari Terakhir
+                Statistik Pendapatan
               </h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <p className="text-xl font-bold text-yellow-400">
-                    {orders.filter(o => o.status === 'delivered').length}
-                  </p>
-                  <p className="text-xs text-gray-400">Total Order</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold text-green-400">
-                    {formatCurrency(todayEarnings)}
+                    {formatCurrency(earningsStats?.today || 0)}
                   </p>
                   <p className="text-xs text-gray-400">Hari Ini</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-blue-400">
-                    {orders.filter(o => o.status === 'delivered').length > 0 ? 
-                      (driverData?.rating || 5.0) : '5.0'}
+                  <p className="text-xl font-bold text-green-400">
+                    {formatCurrency(earningsStats?.week || 0)}
                   </p>
-                  <p className="text-xs text-gray-400">Rating</p>
+                  <p className="text-xs text-gray-400">Minggu Ini</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-bold text-blue-400">
+                    {formatCurrency(earningsStats?.month || 0)}
+                  </p>
+                  <p className="text-xs text-gray-400">Bulan Ini</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-bold text-purple-400">
+                    {formatCurrency(earningsStats?.total || 0)}
+                  </p>
+                  <p className="text-xs text-gray-400">Total</p>
                 </div>
               </div>
             </div>
@@ -516,6 +648,7 @@ export default function DriverDashboard() {
                 <p>• Tetap online di jam sibuk (11:00-14:00, 18:00-21:00)</p>
                 <p>• Jaga rating dengan pelayanan terbaik</p>
                 <p>• Aktifkan notifikasi untuk pesanan baru</p>
+                <p>• Selesaikan pengantaran dengan cepat dan akurat</p>
               </div>
             </div>
           </div>
@@ -540,6 +673,7 @@ export default function DriverDashboard() {
                     <div className="flex-1">
                       <h4 className="font-bold text-lg">{user?.name || 'Driver'}</h4>
                       <p className="text-gray-400 text-sm">ID: #{user?.id}</p>
+                      <p className="text-gray-400 text-sm">📱 {user?.phone || profileData.phone || 'Belum diatur'}</p>
                       <div className="flex items-center mt-1">
                         <span className="text-yellow-400 mr-1">⭐</span>
                         <span className="text-sm">{driverData?.rating || 5.0}</span>
@@ -550,8 +684,31 @@ export default function DriverDashboard() {
                     </div>
                   </div>
                   
+                  {/* Vehicle Info */}
+                  <div className="bg-gray-700 rounded-lg p-3 mb-4">
+                    <h5 className="font-medium text-sm mb-2">Informasi Kendaraan</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Jenis</span>
+                        <span>{driverData?.vehicleType || profileData.vehicleType || 'Belum diatur'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Nomor Polisi</span>
+                        <span>{driverData?.vehicleNumber || profileData.vehicleNumber || 'Belum diatur'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <Button 
-                    onClick={() => setEditProfile(true)}
+                    onClick={() => {
+                      setProfileData({
+                        name: user?.name || '',
+                        phone: user?.phone || '',
+                        vehicleType: driverData?.vehicleType || '',
+                        vehicleNumber: driverData?.vehicleNumber || ''
+                      });
+                      setEditProfile(true);
+                    }}
                     variant="outline" 
                     className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
                   >
@@ -570,6 +727,7 @@ export default function DriverDashboard() {
                         value={profileData.name}
                         onChange={(e) => setProfileData({...profileData, name: e.target.value})}
                         className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="Masukkan nama lengkap"
                       />
                     </div>
                     
@@ -585,12 +743,15 @@ export default function DriverDashboard() {
                     
                     <div>
                       <Label className="text-sm text-gray-300">Jenis Kendaraan</Label>
-                      <Input
+                      <select 
                         value={profileData.vehicleType}
                         onChange={(e) => setProfileData({...profileData, vehicleType: e.target.value})}
-                        className="bg-gray-700 border-gray-600 text-white"
-                        placeholder="Motor/Mobil"
-                      />
+                        className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded"
+                      >
+                        <option value="">Pilih jenis kendaraan</option>
+                        <option value="motorcycle">Motor</option>
+                        <option value="car">Mobil</option>
+                      </select>
                     </div>
                     
                     <div>
@@ -624,6 +785,33 @@ export default function DriverDashboard() {
               )}
             </div>
 
+            {/* Performance Stats */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <h4 className="font-medium mb-3">Performa Driver</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-yellow-400">{driverData?.rating || 5.0}</p>
+                  <p className="text-xs text-gray-400">Rating</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-400">{driverData?.totalDeliveries || 0}</p>
+                  <p className="text-xs text-gray-400">Total Antar</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-400">
+                    {orders.filter(o => o.status === 'delivered').length || 0}
+                  </p>
+                  <p className="text-xs text-gray-400">Bulan Ini</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-400">
+                    {driverData?.isOnline ? 'ONLINE' : 'OFFLINE'}
+                  </p>
+                  <p className="text-xs text-gray-400">Status</p>
+                </div>
+              </div>
+            </div>
+
             {/* Status & Verification */}
             <div className="space-y-2">
               <div className="bg-gray-800 rounded-lg p-4">
@@ -644,15 +832,37 @@ export default function DriverDashboard() {
                     <span className="text-gray-400">STNK</span>
                     <span className="text-green-400">✓ Terverifikasi</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Foto Profil</span>
+                    <span className="text-green-400">✓ Terverifikasi</span>
+                  </div>
                 </div>
               </div>
               
               <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Phone className="w-5 h-5 text-gray-400" />
-                  <span>Kontak Darurat</span>
+                  <div>
+                    <span className="block">Kontak Darurat</span>
+                    <span className="text-xs text-gray-400">+62 812-3456-7890</span>
+                  </div>
                 </div>
-                <span className="text-gray-400">→</span>
+                <Button variant="ghost" size="sm" className="text-gray-400">
+                  Edit
+                </Button>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <span className="block">Alamat Rumah</span>
+                    <span className="text-xs text-gray-400">Jl. Merdeka No. 123, Tasikmalaya</span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" className="text-gray-400">
+                  Edit
+                </Button>
               </div>
             </div>
           </div>
@@ -675,73 +885,224 @@ export default function DriverDashboard() {
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Pesanan Baru</span>
+                  <div>
+                    <span className="text-sm">Pesanan Baru</span>
+                    <p className="text-xs text-gray-400">Terima notifikasi pesanan masuk</p>
+                  </div>
                   <Switch 
                     checked={notifications.orderUpdates}
-                    onCheckedChange={(checked) => setNotifications({...notifications, orderUpdates: checked})}
+                    onCheckedChange={(checked) => {
+                      setNotifications({...notifications, orderUpdates: checked});
+                      updateSettingsMutation.mutate({ notifications: {...notifications, orderUpdates: checked} });
+                    }}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Update Pendapatan</span>
+                  <div>
+                    <span className="text-sm">Update Pendapatan</span>
+                    <p className="text-xs text-gray-400">Notifikasi saldo dan penarikan</p>
+                  </div>
                   <Switch 
                     checked={notifications.earnings}
-                    onCheckedChange={(checked) => setNotifications({...notifications, earnings: checked})}
+                    onCheckedChange={(checked) => {
+                      setNotifications({...notifications, earnings: checked});
+                      updateSettingsMutation.mutate({ notifications: {...notifications, earnings: checked} });
+                    }}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Promosi & Bonus</span>
+                  <div>
+                    <span className="text-sm">Promosi & Bonus</span>
+                    <p className="text-xs text-gray-400">Info promo dan reward khusus</p>
+                  </div>
                   <Switch 
                     checked={notifications.promotions}
-                    onCheckedChange={(checked) => setNotifications({...notifications, promotions: checked})}
+                    onCheckedChange={(checked) => {
+                      setNotifications({...notifications, promotions: checked});
+                      updateSettingsMutation.mutate({ notifications: {...notifications, promotions: checked} });
+                    }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Other Settings */}
-            <div className="space-y-2">
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <MapPin className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <span className="block">Lokasi & Privasi</span>
-                    <span className="text-xs text-gray-400">Kelola akses lokasi</span>
-                  </div>
-                </div>
-                <span className="text-gray-400">→</span>
+            {/* Working Hours */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center mb-4">
+                <Clock className="w-5 h-5 text-gray-400 mr-2" />
+                <h4 className="font-medium">Jam Kerja</h4>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Clock className="w-5 h-5 text-gray-400" />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="block">Jam Kerja</span>
-                    <span className="text-xs text-gray-400">Atur jadwal online</span>
+                    <Label className="text-xs text-gray-400">Mulai Kerja</Label>
+                    <Input
+                      type="time"
+                      value={workingHours.start}
+                      onChange={(e) => {
+                        const newHours = {...workingHours, start: e.target.value};
+                        setWorkingHours(newHours);
+                        updateSettingsMutation.mutate({ workingHours: newHours });
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-400">Selesai Kerja</Label>
+                    <Input
+                      type="time"
+                      value={workingHours.end}
+                      onChange={(e) => {
+                        const newHours = {...workingHours, end: e.target.value};
+                        setWorkingHours(newHours);
+                        updateSettingsMutation.mutate({ workingHours: newHours });
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
                   </div>
                 </div>
-                <span className="text-gray-400">→</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-400">Istirahat Mulai</Label>
+                    <Input
+                      type="time"
+                      value={workingHours.breakStart}
+                      onChange={(e) => {
+                        const newHours = {...workingHours, breakStart: e.target.value};
+                        setWorkingHours(newHours);
+                        updateSettingsMutation.mutate({ workingHours: newHours });
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-400">Istirahat Selesai</Label>
+                    <Input
+                      type="time"
+                      value={workingHours.breakEnd}
+                      onChange={(e) => {
+                        const newHours = {...workingHours, breakEnd: e.target.value};
+                        setWorkingHours(newHours);
+                        updateSettingsMutation.mutate({ workingHours: newHours });
+                      }}
+                      className="bg-gray-700 border-gray-600 text-white text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Location Settings */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center mb-4">
+                <MapPin className="w-5 h-5 text-gray-400 mr-2" />
+                <h4 className="font-medium">Lokasi & Privasi</h4>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Shield className="w-5 h-5 text-gray-400" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <span className="block">Keamanan</span>
-                    <span className="text-xs text-gray-400">PIN & keamanan akun</span>
+                    <span className="text-sm">Bagikan Lokasi</span>
+                    <p className="text-xs text-gray-400">Untuk pelacakan pesanan real-time</p>
                   </div>
+                  <Switch 
+                    checked={locationSettings.shareLocation}
+                    onCheckedChange={(checked) => {
+                      const newSettings = {...locationSettings, shareLocation: checked};
+                      setLocationSettings(newSettings);
+                      updateSettingsMutation.mutate({ location: newSettings });
+                    }}
+                  />
                 </div>
-                <span className="text-gray-400">→</span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm">Lokasi Presisi Tinggi</span>
+                    <p className="text-xs text-gray-400">GPS akurat untuk navigasi</p>
+                  </div>
+                  <Switch 
+                    checked={locationSettings.preciseLocation}
+                    onCheckedChange={(checked) => {
+                      const newSettings = {...locationSettings, preciseLocation: checked};
+                      setLocationSettings(newSettings);
+                      updateSettingsMutation.mutate({ location: newSettings });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-400">Radius Kerja (km)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={locationSettings.workingRadius}
+                    onChange={(e) => {
+                      const newSettings = {...locationSettings, workingRadius: Number(e.target.value)};
+                      setLocationSettings(newSettings);
+                      updateSettingsMutation.mutate({ location: newSettings });
+                    }}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Security Settings */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center mb-4">
+                <Shield className="w-5 h-5 text-gray-400 mr-2" />
+                <h4 className="font-medium">Keamanan</h4>
               </div>
               
-              <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <HelpCircle className="w-5 h-5 text-gray-400" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
                   <div>
-                    <span className="block">Bantuan & Dukungan</span>
-                    <span className="text-xs text-gray-400">FAQ, kontak support</span>
+                    <span className="text-sm">Ubah PIN Dompet</span>
+                    <p className="text-xs text-gray-400">PIN untuk transaksi dompet</p>
                   </div>
+                  <Button variant="ghost" size="sm" className="text-yellow-400">
+                    Ubah
+                  </Button>
                 </div>
-                <span className="text-gray-400">→</span>
+                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                  <div>
+                    <span className="text-sm">Ubah Password</span>
+                    <p className="text-xs text-gray-400">Password login akun</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-yellow-400">
+                    Ubah
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-700 rounded">
+                  <div>
+                    <span className="text-sm">Autentikasi 2 Faktor</span>
+                    <p className="text-xs text-gray-400">Keamanan ekstra dengan SMS</p>
+                  </div>
+                  <Switch defaultChecked={false} />
+                </div>
+              </div>
+            </div>
+
+            {/* Support */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center mb-4">
+                <HelpCircle className="w-5 h-5 text-gray-400 mr-2" />
+                <h4 className="font-medium">Bantuan & Dukungan</h4>
+              </div>
+              
+              <div className="space-y-2">
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                  <span>Pusat Bantuan</span>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                  <span>Chat dengan CS</span>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                  <span>Lapor Masalah</span>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:bg-gray-700">
+                  <span>Syarat & Ketentuan</span>
+                </Button>
               </div>
             </div>
 
