@@ -11,8 +11,8 @@ export default function RoleSelector() {
       description: "Pesan makanan favorit dari restoran terbaik",
       icon: Users,
       color: "bg-blue-500",
-      registerPath: "/customer/login",
-      signinPath: "/customer/signin"
+      registerPath: "/customer/signin",
+      signinPath: "/customer/login"
     },
     {
       id: "driver",
@@ -20,8 +20,8 @@ export default function RoleSelector() {
       description: "Antar pesanan dan dapatkan penghasilan tambahan",
       icon: Truck,
       color: "bg-green-500",
-      registerPath: "/driver/login",
-      signinPath: "/driver/signin"
+      registerPath: "/driver/signin",
+      signinPath: "/driver/login"
     },
     {
       id: "restaurant",
@@ -29,8 +29,8 @@ export default function RoleSelector() {
       description: "Kelola restoran dan jual makanan online",
       icon: ChefHat,
       color: "bg-orange-500",
-      registerPath: "/restaurant/login",
-      signinPath: "/restaurant/signin"
+      registerPath: "/restaurant/signin",
+      signinPath: "/restaurant/login"
     }
   ];
 

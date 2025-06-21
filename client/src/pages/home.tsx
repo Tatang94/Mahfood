@@ -95,21 +95,21 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="space-y-4 md:space-y-0 md:space-x-6 md:flex md:justify-center">
-            <Link href="/select-role" className="block w-full md:w-auto">
+            <Link href="/customer/signin" className="block w-full md:w-auto">
               <Button 
                 size="lg" 
                 className="w-full md:w-48 h-14 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                Sign Up
+                Daftar
               </Button>
             </Link>
-            <Link href="/select-role" className="block w-full md:w-auto">
+            <Link href="/customer/login" className="block w-full md:w-auto">
               <Button 
                 size="lg" 
                 variant="outline"
                 className="w-full md:w-48 h-14 border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-semibold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                Sign In
+                Masuk
               </Button>
             </Link>
           </div>
@@ -171,7 +171,7 @@ export default function Home() {
             </div>
           </div>
           
-          <Link href="/select-role">
+          <Link href="/customer/signin">
             <Button 
               size="lg" 
               className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg px-12 h-14 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
@@ -179,6 +179,44 @@ export default function Home() {
               Mulai Sekarang
             </Button>
           </Link>
+        </div>
+      </section>
+
+      {/* Partner Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+            Bergabung sebagai Mitra
+          </h3>
+          <p className="text-lg text-gray-600 mb-12">
+            Ingin bergabung sebagai driver atau restoran? Daftar sekarang!
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Utensils className="w-8 h-8 text-green-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">Jadi Driver</h4>
+              <p className="text-gray-600 mb-4">Dapatkan penghasilan tambahan dengan mengantar makanan</p>
+              <Link href="/driver/signin">
+                <Button className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg">
+                  Daftar Driver
+                </Button>
+              </Link>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Pizza className="w-8 h-8 text-orange-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-800 mb-2">Jadi Mitra Restoran</h4>
+              <p className="text-gray-600 mb-4">Jual makanan online dan jangkau lebih banyak pelanggan</p>
+              <Link href="/restaurant/signin">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg">
+                  Daftar Restoran
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>
