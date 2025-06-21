@@ -362,17 +362,17 @@ export default function DriverDashboard() {
   }, [driverData?.isOnline]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-peach-50 to-orange-100 text-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-white text-gray-800">
       {/* Header dengan Profil Driver */}
-      <div className="bg-white shadow-lg border-b border-orange-200 p-4">
+      <div className="bg-gradient-to-r from-orange-200 to-white shadow-lg border-b border-orange-100 p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-14 h-14 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-              <User className="w-8 h-8 text-white" />
+            <div className="w-14 h-14 bg-gradient-to-r from-orange-300 to-orange-200 rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-8 h-8 text-gray-700" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-gray-800">{user?.name || 'Driver'}</h2>
-              <p className="text-sm text-orange-600">ID: #{user?.id}</p>
+              <h2 className="font-bold text-lg text-gray-700">{user?.name || 'Driver'}</h2>
+              <p className="text-sm text-orange-500">ID: #{user?.id}</p>
             </div>
           </div>
           
@@ -380,7 +380,7 @@ export default function DriverDashboard() {
           <div className="flex items-center space-x-3">
             <div className="text-right">
               <p className="text-xs text-gray-500">Status</p>
-              <p className={`text-sm font-bold ${driverOnline ? 'text-green-600' : 'text-red-500'}`}>
+              <p className={`text-sm font-bold ${driverOnline ? 'text-orange-500' : 'text-gray-400'}`}>
                 {driverOnline ? 'ONLINE' : 'OFFLINE'}
               </p>
             </div>
@@ -393,8 +393,8 @@ export default function DriverDashboard() {
               disabled={updateDriverStatusMutation.isPending}
               className={`w-12 h-12 rounded-full shadow-lg ${
                 driverOnline 
-                  ? 'bg-red-500 hover:bg-red-600 text-white' 
-                  : 'bg-green-500 hover:bg-green-600 text-white'
+                  ? 'bg-orange-300 hover:bg-orange-400 text-gray-700' 
+                  : 'bg-orange-400 hover:bg-orange-500 text-white'
               }`}
             >
               <Power className="w-6 h-6" />
@@ -403,18 +403,18 @@ export default function DriverDashboard() {
         </div>
 
         {/* Saldo & Stats */}
-        <div className="grid grid-cols-3 gap-4 bg-white/70 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
+        <div className="grid grid-cols-3 gap-4 bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100">
           <div className="text-center">
-            <p className="text-xs text-gray-600">SALDO AKTIF</p>
-            <p className="font-bold text-orange-600">{formatCurrency(driverData?.totalEarnings || 0)}</p>
+            <p className="text-xs text-gray-500">SALDO AKTIF</p>
+            <p className="font-bold text-orange-500">{formatCurrency(driverData?.totalEarnings || 0)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-600">RATING</p>
-            <p className="font-bold text-gray-800">{driverData?.rating || 5.0} ⭐</p>
+            <p className="text-xs text-gray-500">RATING</p>
+            <p className="font-bold text-gray-700">{driverData?.rating || 5.0} ⭐</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-600">STATUS</p>
-            <p className={`font-bold text-xs ${driverOnline ? 'text-green-600' : 'text-red-500'}`}>
+            <p className="text-xs text-gray-500">STATUS</p>
+            <p className={`font-bold text-xs ${driverOnline ? 'text-orange-500' : 'text-gray-400'}`}>
               {driverOnline ? 'ONLINE' : 'OFFLINE'}
             </p>
           </div>
@@ -422,8 +422,8 @@ export default function DriverDashboard() {
         
         {/* Real-time Status Indicator */}
         <div className="mt-2 flex items-center justify-center">
-          <div className={`w-2 h-2 rounded-full mr-2 ${driverOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-          <span className="text-xs text-gray-600">
+          <div className={`w-2 h-2 rounded-full mr-2 ${driverOnline ? 'bg-orange-400 animate-pulse' : 'bg-gray-400'}`}></div>
+          <span className="text-xs text-gray-500">
             {driverOnline ? 'Siap menerima pesanan' : 'Tidak menerima pesanan'}
           </span>
         </div>
@@ -437,10 +437,10 @@ export default function DriverDashboard() {
             {/* Detail Pesanan Aktif */}
             {activeOrder ? (
               <div className="space-y-4">
-                <div className="bg-gray-800 rounded-lg p-4">
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-lg">Pesanan Aktif</h3>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(activeOrder.status)} text-gray-900`}>
+                    <h3 className="font-bold text-lg text-gray-700">Pesanan Aktif</h3>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(activeOrder.status)} text-white`}>
                       {activeOrder.status === 'confirmed' ? 'MENUNGGU' :
                        activeOrder.status === 'preparing' ? 'DISIAPKAN' :
                        activeOrder.status === 'ready' ? 'SIAP AMBIL' :
@@ -449,38 +449,38 @@ export default function DriverDashboard() {
                   </div>
 
                   {/* Penjemputan */}
-                  <div className="bg-gray-700 rounded-lg p-3 mb-3">
+                  <div className="bg-orange-50 rounded-lg p-3 mb-3 border border-orange-100">
                     <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-blue-400 rounded-full mt-2"></div>
+                      <div className="w-3 h-3 bg-orange-400 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 font-medium">TITIK PENJEMPUTAN</p>
-                        <p className="text-sm font-medium">{activeOrder.restaurantAddress}</p>
-                        <p className="text-xs text-gray-400 mt-1">Restoran</p>
+                        <p className="text-xs text-gray-500 font-medium">TITIK PENJEMPUTAN</p>
+                        <p className="text-sm font-medium text-gray-700">{activeOrder.restaurantAddress}</p>
+                        <p className="text-xs text-gray-500 mt-1">Restoran</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Tujuan */}
-                  <div className="bg-gray-700 rounded-lg p-3 mb-4">
+                  <div className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-100">
                     <div className="flex items-start space-x-3">
-                      <div className="w-3 h-3 bg-green-400 rounded-full mt-2"></div>
+                      <div className="w-3 h-3 bg-orange-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 font-medium">TUJUAN</p>
-                        <p className="text-sm font-medium">{activeOrder.deliveryAddress}</p>
-                        <p className="text-xs text-gray-400 mt-1">Customer #{activeOrder.customerId}</p>
+                        <p className="text-xs text-gray-500 font-medium">TUJUAN</p>
+                        <p className="text-sm font-medium text-gray-700">{activeOrder.deliveryAddress}</p>
+                        <p className="text-xs text-gray-500 mt-1">Customer #{activeOrder.customerId}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Info Detail */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-gray-700 rounded-lg p-3 text-center">
-                      <p className="text-xs text-gray-400">ESTIMASI TARIF</p>
-                      <p className="text-lg font-bold text-yellow-400">{formatCurrency(activeOrder.deliveryFee)}</p>
+                    <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-100">
+                      <p className="text-xs text-gray-500">ESTIMASI TARIF</p>
+                      <p className="text-lg font-bold text-orange-500">{formatCurrency(activeOrder.deliveryFee)}</p>
                     </div>
-                    <div className="bg-gray-700 rounded-lg p-3 text-center">
-                      <p className="text-xs text-gray-400">JARAK TEMPUH</p>
-                      <p className="text-lg font-bold text-white">~3.2 km</p>
+                    <div className="bg-orange-50 rounded-lg p-3 text-center border border-orange-100">
+                      <p className="text-xs text-gray-500">JARAK TEMPUH</p>
+                      <p className="text-lg font-bold text-gray-700">~3.2 km</p>
                     </div>
                   </div>
 
@@ -491,18 +491,18 @@ export default function DriverDashboard() {
                         orderId: activeOrder.id, 
                         status: getNextAction(activeOrder.status).next 
                       })}
-                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 shadow-lg"
+                      className="w-full bg-gradient-to-r from-orange-400 to-orange-300 hover:from-orange-500 hover:to-orange-400 text-gray-700 font-bold py-3 shadow-lg"
                     >
                       {getNextAction(activeOrder.status).text}
                     </Button>
                     
                     {activeOrder.status !== 'confirmed' && (
                       <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
+                        <Button variant="outline" className="border-orange-200 text-orange-500 hover:bg-orange-50">
                           <Phone className="w-4 h-4 mr-2" />
                           Hubungi
                         </Button>
-                        <Button variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
+                        <Button variant="outline" className="border-orange-200 text-orange-500 hover:bg-orange-50">
                           <Navigation className="w-4 h-4 mr-2" />
                           Navigasi
                         </Button>
@@ -512,21 +512,21 @@ export default function DriverDashboard() {
                 </div>
 
                 {/* Peta Placeholder */}
-                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 h-48 flex items-center justify-center shadow-lg border border-orange-200">
+                <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 h-48 flex items-center justify-center shadow-lg border border-orange-100">
                   <div className="text-center">
-                    <Route className="w-12 h-12 text-orange-500 mx-auto mb-2" />
-                    <p className="text-gray-700 text-sm font-medium">Peta Rute & Navigasi</p>
-                    <p className="text-xs text-gray-600">Jalur optimal ke tujuan</p>
+                    <Route className="w-12 h-12 text-orange-400 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm font-medium">Peta Rute & Navigasi</p>
+                    <p className="text-xs text-gray-500">Jalur optimal ke tujuan</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-200">
-                <Target className="w-16 h-16 text-orange-400 mx-auto mb-4" />
-                <h3 className="font-bold text-xl mb-2 text-gray-800">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-100">
+                <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                <h3 className="font-bold text-xl mb-2 text-gray-700">
                   {driverOnline ? 'Menunggu Pesanan' : 'Status Offline'}
                 </h3>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-500 text-sm mb-4">
                   {driverOnline 
                     ? 'Anda sedang online. Pesanan baru akan muncul di sini.' 
                     : 'Aktifkan status online untuk mulai menerima pesanan.'
@@ -538,7 +538,7 @@ export default function DriverDashboard() {
                       setDriverOnline(true);
                       updateDriverStatusMutation.mutate(true);
                     }}
-                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg"
+                    className="bg-gradient-to-r from-orange-400 to-orange-300 hover:from-orange-500 hover:to-orange-400 text-gray-700 font-bold shadow-lg"
                   >
                     <Power className="w-4 h-4 mr-2" />
                     Mulai Online
@@ -553,29 +553,29 @@ export default function DriverDashboard() {
         {activeTab === "order" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-gray-800">Riwayat Pesanan</h3>
-              <Filter className="w-5 h-5 text-orange-500" />
+              <h3 className="font-bold text-lg text-gray-700">Riwayat Pesanan</h3>
+              <Filter className="w-5 h-5 text-orange-400" />
             </div>
             
             {/* Filter Status */}
             <div className="grid grid-cols-3 gap-2">
               <Button 
                 variant={orderFilter === 'all' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'all' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
+                className={`text-xs ${orderFilter === 'all' ? 'bg-orange-300 text-gray-700' : 'border-orange-200 text-orange-500'}`}
                 onClick={() => setOrderFilter('all')}
               >
                 Semua ({orders.length})
               </Button>
               <Button 
                 variant={orderFilter === 'completed' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'completed' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
+                className={`text-xs ${orderFilter === 'completed' ? 'bg-orange-300 text-gray-700' : 'border-orange-200 text-orange-500'}`}
                 onClick={() => setOrderFilter('completed')}
               >
                 Selesai ({orders.filter(o => o.status === 'delivered').length})
               </Button>
               <Button 
                 variant={orderFilter === 'cancelled' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'cancelled' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
+                className={`text-xs ${orderFilter === 'cancelled' ? 'bg-orange-300 text-gray-700' : 'border-orange-200 text-orange-500'}`}
                 onClick={() => setOrderFilter('cancelled')}
               >
                 Dibatalkan ({orders.filter(o => o.status === 'cancelled').length})
@@ -584,41 +584,41 @@ export default function DriverDashboard() {
 
             {/* Statistics */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-orange-200">
-                <p className="text-2xl font-bold text-orange-600">{orders.filter(o => o.status === 'delivered').length}</p>
-                <p className="text-xs text-gray-600">Total Selesai</p>
+              <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-orange-100">
+                <p className="text-2xl font-bold text-orange-500">{orders.filter(o => o.status === 'delivered').length}</p>
+                <p className="text-xs text-gray-500">Total Selesai</p>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-green-200">
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(todayEarnings)}</p>
-                <p className="text-xs text-gray-600">Hari Ini</p>
+              <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-orange-100">
+                <p className="text-2xl font-bold text-orange-400">{formatCurrency(todayEarnings)}</p>
+                <p className="text-xs text-gray-500">Hari Ini</p>
               </div>
             </div>
 
             {/* List Order */}
             <div className="space-y-3">
               {filteredOrders.slice(0, 10).map((order) => (
-                <div key={order.id} className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
+                <div key={order.id} className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-800">Order #{order.id}</span>
+                    <span className="text-sm font-medium text-gray-700">Order #{order.id}</span>
                     <div className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(order.status)} text-white`}>
                       {order.status === 'delivered' ? 'SELESAI' :
                        order.status === 'cancelled' ? 'DIBATALKAN' :
                        order.status.toUpperCase()}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600 mb-2">📍 {order.deliveryAddress}</p>
+                  <p className="text-xs text-gray-500 mb-2">📍 {order.deliveryAddress}</p>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                      <span className="text-orange-600 font-bold">{formatCurrency(order.deliveryFee || 0)}</span>
+                      <span className="text-orange-500 font-bold">{formatCurrency(order.deliveryFee || 0)}</span>
                       {order.status === 'delivered' && (
-                        <Star className="w-3 h-3 text-orange-500" />
+                        <Star className="w-3 h-3 text-orange-400" />
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-gray-500">
                         {order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : ''}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-400">
                         {order.createdAt ? new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : ''}
                       </p>
                     </div>
@@ -627,9 +627,9 @@ export default function DriverDashboard() {
               ))}
               
               {filteredOrders.length === 0 && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-200">
-                  <Package className="w-12 h-12 text-orange-400 mx-auto mb-2" />
-                  <p className="text-gray-600">
+                <div className="bg-white/95 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-100">
+                  <Package className="w-12 h-12 text-orange-300 mx-auto mb-2" />
+                  <p className="text-gray-500">
                     {orderFilter === 'all' ? 'Belum ada riwayat pesanan' :
                      orderFilter === 'completed' ? 'Belum ada pesanan selesai' :
                      'Belum ada pesanan dibatalkan'}
@@ -644,18 +644,18 @@ export default function DriverDashboard() {
         {activeTab === "dompet" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-gray-800">Dompet Driver</h3>
-              <TrendingUp className="w-5 h-5 text-green-600" />
+              <h3 className="font-bold text-lg text-gray-700">Dompet Driver</h3>
+              <TrendingUp className="w-5 h-5 text-orange-400" />
             </div>
             
             {/* Saldo */}
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg p-6 text-gray-900">
+            <div className="bg-gradient-to-r from-orange-300 to-orange-200 rounded-lg p-6 text-gray-700 shadow-lg border border-orange-100">
               <div className="text-center">
                 <p className="text-sm font-medium opacity-80">TOTAL PENDAPATAN</p>
                 <p className="text-3xl font-bold">{formatCurrency(driverData?.totalEarnings || 0)}</p>
                 <p className="text-xs opacity-70 mt-1">Saldo dapat dicairkan</p>
                 <div className="flex items-center justify-center mt-2">
-                  <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                   <span className="text-xs font-medium">Aktif</span>
                 </div>
               </div>
@@ -675,38 +675,38 @@ export default function DriverDashboard() {
                   }
                 }}
                 disabled={withdrawMutation.isPending || (driverData?.totalEarnings || 0) <= 0}
-                className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700"
+                className="bg-white/90 text-gray-700 border border-orange-100 h-16 flex flex-col hover:bg-orange-50 shadow-lg"
               >
-                <DollarSign className="w-6 h-6 mb-1" />
+                <DollarSign className="w-6 h-6 mb-1 text-orange-400" />
                 <span className="text-xs">
                   {withdrawMutation.isPending ? 'Memproses...' : 'Tarik Saldo'}
                 </span>
               </Button>
               <Button 
                 onClick={() => setShowWalletHistory(!showWalletHistory)}
-                className="bg-gray-800 text-white border border-gray-600 h-16 flex flex-col hover:bg-gray-700"
+                className="bg-white/90 text-gray-700 border border-orange-100 h-16 flex flex-col hover:bg-orange-50 shadow-lg"
               >
-                <Clock className="w-6 h-6 mb-1" />
+                <Clock className="w-6 h-6 mb-1 text-orange-400" />
                 <span className="text-xs">Riwayat</span>
               </Button>
             </div>
 
             {/* Withdraw Amount Input */}
             {withdrawAmount !== '' && (
-              <div className="bg-gray-800 rounded-lg p-4">
-                <Label className="text-sm text-gray-300">Jumlah Penarikan</Label>
+              <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
+                <Label className="text-sm text-gray-600">Jumlah Penarikan</Label>
                 <Input
                   type="number"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white mt-2"
+                  className="bg-white border-orange-200 text-gray-700 mt-2"
                   placeholder="Masukkan jumlah"
                 />
                 <div className="flex space-x-2 mt-3">
                   <Button 
                     onClick={() => setWithdrawAmount('')}
                     variant="outline" 
-                    className="flex-1 border-gray-600 text-gray-300"
+                    className="flex-1 border-orange-200 text-gray-600"
                   >
                     Batal
                   </Button>
@@ -719,7 +719,7 @@ export default function DriverDashboard() {
                       }
                     }}
                     disabled={withdrawMutation.isPending}
-                    className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                    className="flex-1 bg-orange-300 hover:bg-orange-400 text-gray-700"
                   >
                     Konfirmasi
                   </Button>
@@ -729,22 +729,22 @@ export default function DriverDashboard() {
 
             {/* Transaction History */}
             {showWalletHistory && (
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h4 className="font-medium mb-3">Riwayat Transaksi</h4>
+              <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
+                <h4 className="font-medium mb-3 text-gray-700">Riwayat Transaksi</h4>
                 <div className="space-y-3 max-h-64 overflow-y-auto">
                   {earningsStats?.transactions?.map((transaction: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-700 rounded">
+                    <div key={index} className="flex justify-between items-center p-3 bg-orange-50 rounded border border-orange-100">
                       <div>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium text-gray-700">
                           {transaction.type === 'delivery' ? 'Pengantaran' :
                            transaction.type === 'bonus' ? 'Bonus' :
                            transaction.type === 'withdrawal' ? 'Penarikan' : 'Transaksi'}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-500">
                           {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('id-ID') : ''}
                         </p>
                       </div>
-                      <span className={`font-bold ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <span className={`font-bold ${transaction.amount > 0 ? 'text-orange-500' : 'text-gray-500'}`}>
                         {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
                       </span>
                     </div>
@@ -917,14 +917,14 @@ export default function DriverDashboard() {
                     <Button 
                       onClick={() => setEditProfile(false)}
                       variant="outline" 
-                      className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50"
+                      className="flex-1 border-orange-200 text-orange-500 hover:bg-orange-50"
                     >
                       Batal
                     </Button>
                     <Button 
                       onClick={handleProfileSave}
                       disabled={updateProfileMutation.isPending}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                      className="flex-1 bg-gradient-to-r from-orange-400 to-orange-300 hover:from-orange-500 hover:to-orange-400 text-gray-700"
                     >
                       {updateProfileMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                     </Button>
@@ -934,68 +934,68 @@ export default function DriverDashboard() {
             </div>
 
             {/* Performance Stats */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
-              <h4 className="font-medium mb-3 text-gray-800">Performa Driver</h4>
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100">
+              <h4 className="font-medium mb-3 text-gray-700">Performa Driver</h4>
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-2xl font-bold text-orange-600">{driverData?.rating || 5.0}</p>
-                  <p className="text-xs text-gray-700">Rating</p>
+                <div className="text-center p-3 bg-orange-50 border border-orange-100 rounded">
+                  <p className="text-2xl font-bold text-orange-500">{driverData?.rating || 5.0}</p>
+                  <p className="text-xs text-gray-600">Rating</p>
                 </div>
-                <div className="text-center p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-2xl font-bold text-green-600">{driverData?.totalDeliveries || 0}</p>
-                  <p className="text-xs text-gray-700">Total Antar</p>
+                <div className="text-center p-3 bg-orange-50 border border-orange-100 rounded">
+                  <p className="text-2xl font-bold text-orange-400">{driverData?.totalDeliveries || 0}</p>
+                  <p className="text-xs text-gray-600">Total Antar</p>
                 </div>
-                <div className="text-center p-3 bg-blue-50 border border-blue-200 rounded">
-                  <p className="text-2xl font-bold text-blue-600">
+                <div className="text-center p-3 bg-orange-50 border border-orange-100 rounded">
+                  <p className="text-2xl font-bold text-orange-300">
                     {orders.filter(o => o.status === 'delivered').length || 0}
                   </p>
-                  <p className="text-xs text-gray-700">Bulan Ini</p>
+                  <p className="text-xs text-gray-600">Bulan Ini</p>
                 </div>
-                <div className="text-center p-3 bg-purple-50 border border-purple-200 rounded">
-                  <p className={`text-2xl font-bold ${driverData?.isOnline ? 'text-green-600' : 'text-red-500'}`}>
+                <div className="text-center p-3 bg-orange-50 border border-orange-100 rounded">
+                  <p className={`text-2xl font-bold ${driverData?.isOnline ? 'text-orange-500' : 'text-gray-400'}`}>
                     {driverData?.isOnline ? 'ONLINE' : 'OFFLINE'}
                   </p>
-                  <p className="text-xs text-gray-700">Status</p>
+                  <p className="text-xs text-gray-600">Status</p>
                 </div>
               </div>
             </div>
 
             {/* Status & Verification */}
             <div className="space-y-2">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-green-200">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-gray-800">Status Verifikasi</span>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-gray-700">Status Verifikasi</span>
+                  <CheckCircle className="w-5 h-5 text-orange-400" />
                 </div>
                 <div className="space-y-1 text-sm">
-                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                    <span className="text-gray-700">📄 KTP</span>
-                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                    <span className="text-gray-600">📄 KTP</span>
+                    <span className="text-orange-500 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                    <span className="text-gray-700">🪪 SIM</span>
-                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                    <span className="text-gray-600">🪪 SIM</span>
+                    <span className="text-orange-500 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                    <span className="text-gray-700">📋 STNK</span>
-                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                    <span className="text-gray-600">📋 STNK</span>
+                    <span className="text-orange-500 font-medium">✓ Terverifikasi</span>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                    <span className="text-gray-700">📷 Foto Profil</span>
-                    <span className="text-green-600 font-medium">✓ Terverifikasi</span>
+                  <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                    <span className="text-gray-600">📷 Foto Profil</span>
+                    <span className="text-orange-500 font-medium">✓ Terverifikasi</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">
+                <p className="text-xs text-gray-500 mt-2">
                   Semua dokumen telah diverifikasi oleh sistem
                 </p>
               </div>
               
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200 flex items-center justify-between">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-100 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-orange-600" />
+                  <Phone className="w-5 h-5 text-orange-400" />
                   <div>
-                    <span className="block text-gray-800">Kontak Darurat</span>
-                    <span className="text-xs text-gray-600">+62 812-3456-7890</span>
+                    <span className="block text-gray-700">Kontak Darurat</span>
+                    <span className="text-xs text-gray-500">+62 812-3456-7890</span>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" className="text-orange-600 hover:bg-orange-50">
@@ -1145,17 +1145,17 @@ export default function DriverDashboard() {
             </div>
 
             {/* Location Settings */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-white/95 rounded-lg p-4 shadow-lg border border-orange-100">
               <div className="flex items-center mb-4">
-                <MapPin className="w-5 h-5 text-gray-400 mr-2" />
-                <h4 className="font-medium">Lokasi & Privasi</h4>
+                <MapPin className="w-5 h-5 text-orange-400 mr-2" />
+                <h4 className="font-medium text-gray-700">Lokasi & Privasi</h4>
               </div>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm">Bagikan Lokasi</span>
-                    <p className="text-xs text-gray-400">Untuk pelacakan pesanan real-time</p>
+                    <span className="text-sm text-gray-700">Bagikan Lokasi</span>
+                    <p className="text-xs text-gray-500">Untuk pelacakan pesanan real-time</p>
                   </div>
                   <Switch 
                     checked={locationSettings.shareLocation}
@@ -1168,8 +1168,8 @@ export default function DriverDashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-sm">Lokasi Presisi Tinggi</span>
-                    <p className="text-xs text-gray-400">GPS akurat untuk navigasi</p>
+                    <span className="text-sm text-gray-700">Lokasi Presisi Tinggi</span>
+                    <p className="text-xs text-gray-500">GPS akurat untuk navigasi</p>
                   </div>
                   <Switch 
                     checked={locationSettings.preciseLocation}
@@ -1181,7 +1181,7 @@ export default function DriverDashboard() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-400">Radius Kerja (km)</Label>
+                  <Label className="text-sm text-gray-500">Radius Kerja (km)</Label>
                   <Input
                     type="number"
                     min="1"
@@ -1192,7 +1192,7 @@ export default function DriverDashboard() {
                       setLocationSettings(newSettings);
                       updateSettingsMutation.mutate({ location: newSettings });
                     }}
-                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    className="bg-white border-orange-200 text-gray-700 mt-1"
                   />
                 </div>
               </div>
@@ -1314,48 +1314,48 @@ export default function DriverDashboard() {
       {/* Modal Ubah PIN */}
       {showChangePinModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="font-bold text-lg mb-4 text-white">Ubah PIN Dompet</h3>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl border border-orange-100">
+            <h3 className="font-bold text-lg mb-4 text-gray-700">Ubah PIN Dompet</h3>
             
             <div className="space-y-4">
               <div>
-                <Label className="text-sm text-gray-300">PIN Lama</Label>
+                <Label className="text-sm text-gray-600">PIN Lama</Label>
                 <Input
                   type="password"
                   value={pinData.currentPin}
                   onChange={(e) => setPinData({...pinData, currentPin: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Masukkan PIN lama (6 digit)"
                   maxLength={6}
                 />
               </div>
               
               <div>
-                <Label className="text-sm text-gray-300">PIN Baru</Label>
+                <Label className="text-sm text-gray-600">PIN Baru</Label>
                 <Input
                   type="password"
                   value={pinData.newPin}
                   onChange={(e) => setPinData({...pinData, newPin: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Masukkan PIN baru (6 digit)"
                   maxLength={6}
                 />
               </div>
               
               <div>
-                <Label className="text-sm text-gray-300">Konfirmasi PIN Baru</Label>
+                <Label className="text-sm text-gray-600">Konfirmasi PIN Baru</Label>
                 <Input
                   type="password"
                   value={pinData.confirmPin}
                   onChange={(e) => setPinData({...pinData, confirmPin: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Ulangi PIN baru"
                   maxLength={6}
                 />
               </div>
               
               {pinData.newPin && pinData.confirmPin && pinData.newPin !== pinData.confirmPin && (
-                <p className="text-red-400 text-xs">PIN baru tidak cocok</p>
+                <p className="text-red-500 text-xs">PIN baru tidak cocok</p>
               )}
               
               <div className="flex space-x-3 pt-4">
@@ -1365,7 +1365,7 @@ export default function DriverDashboard() {
                     setPinData({ currentPin: '', newPin: '', confirmPin: '' });
                   }}
                   variant="outline" 
-                  className="flex-1 border-gray-600 text-gray-300"
+                  className="flex-1 border-orange-200 text-orange-500"
                 >
                   Batal
                 </Button>
@@ -1389,7 +1389,7 @@ export default function DriverDashboard() {
                     });
                   }}
                   disabled={changePinMutation.isPending || !pinData.currentPin || !pinData.newPin || !pinData.confirmPin || pinData.newPin !== pinData.confirmPin}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                  className="flex-1 bg-orange-300 hover:bg-orange-400 text-gray-700"
                 >
                   {changePinMutation.isPending ? 'Mengubah...' : 'Simpan'}
                 </Button>
@@ -1402,49 +1402,49 @@ export default function DriverDashboard() {
       {/* Modal Ubah Password */}
       {showChangePasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="font-bold text-lg mb-4 text-white">Ubah Password</h3>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl border border-orange-100">
+            <h3 className="font-bold text-lg mb-4 text-gray-700">Ubah Password</h3>
             
             <div className="space-y-4">
               <div>
-                <Label className="text-sm text-gray-300">Password Lama</Label>
+                <Label className="text-sm text-gray-600">Password Lama</Label>
                 <Input
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Masukkan password lama"
                 />
               </div>
               
               <div>
-                <Label className="text-sm text-gray-300">Password Baru</Label>
+                <Label className="text-sm text-gray-600">Password Baru</Label>
                 <Input
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Masukkan password baru (min 6 karakter)"
                 />
               </div>
               
               <div>
-                <Label className="text-sm text-gray-300">Konfirmasi Password Baru</Label>
+                <Label className="text-sm text-gray-600">Konfirmasi Password Baru</Label>
                 <Input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  className="bg-gray-700 border-gray-600 text-white"
+                  className="bg-white border-orange-200 text-gray-700"
                   placeholder="Ulangi password baru"
                 />
               </div>
               
               {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
-                <p className="text-red-400 text-xs">Password baru tidak cocok</p>
+                <p className="text-red-500 text-xs">Password baru tidak cocok</p>
               )}
               
               {passwordData.newPassword && passwordData.newPassword.length < 6 && (
-                <p className="text-red-400 text-xs">Password minimal 6 karakter</p>
+                <p className="text-red-500 text-xs">Password minimal 6 karakter</p>
               )}
               
               <div className="flex space-x-3 pt-4">
@@ -1454,7 +1454,7 @@ export default function DriverDashboard() {
                     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                   }}
                   variant="outline" 
-                  className="flex-1 border-gray-600 text-gray-300"
+                  className="flex-1 border-orange-200 text-orange-500"
                 >
                   Batal
                 </Button>
@@ -1478,7 +1478,7 @@ export default function DriverDashboard() {
                     });
                   }}
                   disabled={changePasswordMutation.isPending || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || passwordData.newPassword.length < 6}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                  className="flex-1 bg-orange-300 hover:bg-orange-400 text-gray-700"
                 >
                   {changePasswordMutation.isPending ? 'Mengubah...' : 'Simpan'}
                 </Button>
@@ -1489,12 +1489,12 @@ export default function DriverDashboard() {
       )}
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-orange-200 to-white border-t border-orange-100 shadow-lg">
         <div className="grid grid-cols-5 h-16">
           <button
             onClick={() => setActiveTab("beranda")}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              activeTab === "beranda" ? "text-yellow-400" : "text-gray-500"
+              activeTab === "beranda" ? "text-orange-500" : "text-gray-500"
             }`}
           >
             <Home className="w-5 h-5" />
