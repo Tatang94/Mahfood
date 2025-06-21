@@ -4,14 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, ArrowLeft, User, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, User, Mail, Lock, Phone } from "lucide-react";
 import { Link } from "wouter";
 
 export default function CustomerSignIn() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
-    password: ""
+    phone: "",
+    password: "",
+    confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -20,29 +24,49 @@ export default function CustomerSignIn() {
     e.preventDefault();
     setIsLoading(true);
 
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Password Tidak Cocok",
+        description: "Password dan konfirmasi password harus sama",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/auth/signin/customer', {
+      const registerData = new FormData();
+      registerData.append('name', formData.name);
+      registerData.append('email', formData.email);
+      registerData.append('phone', formData.phone);
+      registerData.append('password', formData.password);
+      registerData.append('role', 'customer');
+
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: registerData,
       });
 
       if (!response.ok) {
-        throw new Error('Gagal masuk');
+        const error = await response.json();
+        throw new Error(error.message || 'Gagal mendaftar');
       }
 
+      const data = await response.json();
+      localStorage.setItem('auth_token', data.token);
+
       toast({
-        title: "Berhasil Masuk",
-        description: "Selamat datang kembali!",
+        title: "Pendaftaran Berhasil",
+        description: "Selamat datang di TasFood! Anda akan diarahkan ke dashboard.",
       });
 
-      window.location.href = '/customer/dashboard';
-    } catch (error) {
+      setTimeout(() => {
+        window.location.href = '/customer/dashboard';
+      }, 1500);
+    } catch (error: any) {
       toast({
-        title: "Gagal Masuk",
-        description: "Email atau password salah",
+        title: "Gagal Mendaftar",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -67,15 +91,33 @@ export default function CustomerSignIn() {
               <User className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Masuk Sebagai Pelanggan
+              Daftar Sebagai Pelanggan
             </CardTitle>
             <CardDescription className="text-gray-600 mt-2">
-              Masuk untuk menikmati berbagai pilihan makanan lezat
+              Bergabung dengan TasFood dan nikmati makanan lezat di rumah
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Nama Lengkap
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Masukkan nama lengkap"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="pl-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                   Email
@@ -95,6 +137,24 @@ export default function CustomerSignIn() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Nomor Telepon
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Masukkan nomor telepon"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="pl-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
@@ -103,7 +163,7 @@ export default function CustomerSignIn() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Masukkan password Anda"
+                    placeholder="Masukkan password"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                     className="pl-10 pr-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
@@ -119,15 +179,36 @@ export default function CustomerSignIn() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <Link href="/customer/register">
-                  <span className="text-orange-600 hover:text-orange-700 cursor-pointer">
-                    Belum punya akun?
-                  </span>
-                </Link>
-                <Link href="/forgot-password">
-                  <span className="text-gray-600 hover:text-orange-600 cursor-pointer">
-                    Lupa password?
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                  Konfirmasi Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Konfirmasi password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-center text-sm">
+                <span className="text-gray-600">Sudah punya akun? </span>
+                <Link href="/customer/login">
+                  <span className="text-orange-600 hover:text-orange-700 cursor-pointer font-medium">
+                    Masuk di sini
                   </span>
                 </Link>
               </div>
@@ -137,13 +218,23 @@ export default function CustomerSignIn() {
                 disabled={isLoading}
                 className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-base shadow-lg"
               >
-                {isLoading ? "Memproses..." : "Masuk"}
+                {isLoading ? "Mendaftar..." : "Daftar Sekarang"}
               </Button>
             </form>
 
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">Keuntungan Bergabung</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Pesan makanan dari 100+ restoran terbaik</li>
+                <li>• Pengiriman cepat dalam 30 menit</li>
+                <li>• Promo dan diskon menarik setiap hari</li>
+                <li>• Program loyalitas dengan reward</li>
+              </ul>
+            </div>
+
             <div className="text-center">
               <p className="text-xs text-gray-500">
-                Dengan masuk, Anda menyetujui{" "}
+                Dengan mendaftar, Anda menyetujui{" "}
                 <Link href="/terms">
                   <span className="text-orange-600 hover:underline">Syarat & Ketentuan</span>
                 </Link>{" "}
