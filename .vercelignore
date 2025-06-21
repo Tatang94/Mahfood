@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.local
+.env.production
+.env.staging
+.replit
+.config
+.cache
+.tmp
+*.log
+*.tmp
+.DS_Store
+dist
+build
+migrations

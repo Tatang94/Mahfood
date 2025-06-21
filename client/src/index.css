@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fix untuk customer dashboard navigation */
+.customer-dashboard {
+  overflow-x: hidden;
+  position: relative;
+}
+
+.customer-dashboard .bottom-nav {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid #e5e7eb;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+}
+
+/* Pastikan tidak ada footer lain yang muncul */
+.customer-dashboard footer,
+.customer-dashboard .footer,
+body footer {
+  display: none !important;
+}
+
+/* Hide semua footer dan mobile nav ketika di customer dashboard */
+body:has(.customer-dashboard) footer,
+body:has(.customer-dashboard) .mobile-nav,
+.customer-dashboard ~ footer,
+.customer-dashboard ~ .mobile-nav,
+body:has(.customer-dashboard) header,
+.customer-dashboard ~ header {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Force full screen untuk customer dashboard */
+.customer-dashboard-wrapper {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  background: white !important;
+  overflow-y: auto !important;
+}
+
+/* Pastikan tidak ada overflow yang menyebabkan bayangan */
+body {
+  overflow-x: hidden;
+}
+
+/* Custom colors for peach theme */
+.bg-peach-50 {
+  background-color: #fef7f0;
+}
+
+.bg-peach-100 {
+  background-color: #fed7c3;
+}
+
+.bg-peach-200 {
+  background-color: #fcc195;
+}
+
+.text-peach-600 {
+  color: #ea580c;
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(123, 38%, 57%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(88, 50%, 53%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(123, 43%, 70%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* Custom food delivery colors */
+  --foodie-primary: hsl(123, 38%, 57%);
+  --foodie-secondary: hsl(88, 50%, 53%);
+  --foodie-accent: hsl(123, 43%, 70%);
+  --foodie-light: hsl(123, 50%, 75%);
+  --foodie-dark: hsl(122, 84%, 18%);
+}
+
+/* Mobile optimized styles */
+@media (max-width: 768px) {
+  /* Ensure proper touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better text sizing for mobile */
+  .mobile-text-responsive {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  /* Card improvements for mobile */
+  .mobile-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile typography improvements */
+  body {
+    font-size: 14px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-spacing {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+  }
+  
+  /* Improved button sizes for mobile */
+  .mobile-button {
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
+
+/* Custom gradients */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--foodie-primary) 0%, var(--foodie-secondary) 100%);
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, #fb923c 0%, #ef4444 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+}
+
+.gradient-pink {
+  background: linear-gradient(135deg, #f472b6 0%, #ef4444 100%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(123, 38%, 57%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--foodie-primary), var(--foodie-secondary));
+  }
+  
+  .gradient-orange {
+    background: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(0, 84%, 60%));
+  }
+  
+  .gradient-blue {
+    background: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(271, 91%, 65%));
+  }
+  
+  .gradient-pink {
+    background: linear-gradient(135deg, hsl(333, 71%, 51%), hsl(0, 84%, 60%));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
