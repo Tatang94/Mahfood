@@ -362,25 +362,25 @@ export default function DriverDashboard() {
   }, [driverData?.isOnline]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-peach-50 to-orange-100 text-gray-900">
       {/* Header dengan Profil Driver */}
-      <div className="bg-gray-800 p-4">
+      <div className="bg-white shadow-lg border-b border-orange-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-14 h-14 bg-yellow-400 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-gray-900" />
+            <div className="w-14 h-14 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <User className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">{user?.name || 'Driver'}</h2>
-              <p className="text-sm text-gray-400">ID: #{user?.id}</p>
+              <h2 className="font-bold text-lg text-gray-800">{user?.name || 'Driver'}</h2>
+              <p className="text-sm text-orange-600">ID: #{user?.id}</p>
             </div>
           </div>
           
           {/* Status Online/Offline */}
           <div className="flex items-center space-x-3">
             <div className="text-right">
-              <p className="text-xs text-gray-400">Status</p>
-              <p className={`text-sm font-bold ${driverOnline ? 'text-green-400' : 'text-red-400'}`}>
+              <p className="text-xs text-gray-500">Status</p>
+              <p className={`text-sm font-bold ${driverOnline ? 'text-green-600' : 'text-red-500'}`}>
                 {driverOnline ? 'ONLINE' : 'OFFLINE'}
               </p>
             </div>
@@ -391,10 +391,10 @@ export default function DriverDashboard() {
                 updateDriverStatusMutation.mutate(newStatus);
               }}
               disabled={updateDriverStatusMutation.isPending}
-              className={`w-12 h-12 rounded-full ${
+              className={`w-12 h-12 rounded-full shadow-lg ${
                 driverOnline 
-                  ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-green-500 hover:bg-green-600'
+                  ? 'bg-red-500 hover:bg-red-600 text-white' 
+                  : 'bg-green-500 hover:bg-green-600 text-white'
               }`}
             >
               <Power className="w-6 h-6" />
@@ -403,18 +403,18 @@ export default function DriverDashboard() {
         </div>
 
         {/* Saldo & Stats */}
-        <div className="grid grid-cols-3 gap-4 bg-gray-700 rounded-lg p-4">
+        <div className="grid grid-cols-3 gap-4 bg-white/70 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
           <div className="text-center">
-            <p className="text-xs text-gray-400">SALDO AKTIF</p>
-            <p className="font-bold text-yellow-400">{formatCurrency(driverData?.totalEarnings || 0)}</p>
+            <p className="text-xs text-gray-600">SALDO AKTIF</p>
+            <p className="font-bold text-orange-600">{formatCurrency(driverData?.totalEarnings || 0)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400">RATING</p>
-            <p className="font-bold text-white">{driverData?.rating || 5.0} ⭐</p>
+            <p className="text-xs text-gray-600">RATING</p>
+            <p className="font-bold text-gray-800">{driverData?.rating || 5.0} ⭐</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-400">STATUS</p>
-            <p className={`font-bold text-xs ${driverOnline ? 'text-green-400' : 'text-red-400'}`}>
+            <p className="text-xs text-gray-600">STATUS</p>
+            <p className={`font-bold text-xs ${driverOnline ? 'text-green-600' : 'text-red-500'}`}>
               {driverOnline ? 'ONLINE' : 'OFFLINE'}
             </p>
           </div>
@@ -422,8 +422,8 @@ export default function DriverDashboard() {
         
         {/* Real-time Status Indicator */}
         <div className="mt-2 flex items-center justify-center">
-          <div className={`w-2 h-2 rounded-full mr-2 ${driverOnline ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
-          <span className="text-xs text-gray-400">
+          <div className={`w-2 h-2 rounded-full mr-2 ${driverOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+          <span className="text-xs text-gray-600">
             {driverOnline ? 'Siap menerima pesanan' : 'Tidak menerima pesanan'}
           </span>
         </div>
@@ -491,18 +491,18 @@ export default function DriverDashboard() {
                         orderId: activeOrder.id, 
                         status: getNextAction(activeOrder.status).next 
                       })}
-                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3"
+                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 shadow-lg"
                     >
                       {getNextAction(activeOrder.status).text}
                     </Button>
                     
                     {activeOrder.status !== 'confirmed' && (
                       <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" className="border-gray-600 text-gray-300">
+                        <Button variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                           <Phone className="w-4 h-4 mr-2" />
                           Hubungi
                         </Button>
-                        <Button variant="outline" className="border-gray-600 text-gray-300">
+                        <Button variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                           <Navigation className="w-4 h-4 mr-2" />
                           Navigasi
                         </Button>
@@ -512,21 +512,21 @@ export default function DriverDashboard() {
                 </div>
 
                 {/* Peta Placeholder */}
-                <div className="bg-gray-800 rounded-lg p-4 h-48 flex items-center justify-center">
+                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 h-48 flex items-center justify-center shadow-lg border border-orange-200">
                   <div className="text-center">
-                    <Route className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">Peta Rute & Navigasi</p>
+                    <Route className="w-12 h-12 text-orange-500 mx-auto mb-2" />
+                    <p className="text-gray-700 text-sm font-medium">Peta Rute & Navigasi</p>
                     <p className="text-xs text-gray-600">Jalur optimal ke tujuan</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-800 rounded-lg p-8 text-center">
-                <Target className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="font-bold text-xl mb-2">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-200">
+                <Target className="w-16 h-16 text-orange-400 mx-auto mb-4" />
+                <h3 className="font-bold text-xl mb-2 text-gray-800">
                   {driverOnline ? 'Menunggu Pesanan' : 'Status Offline'}
                 </h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4">
                   {driverOnline 
                     ? 'Anda sedang online. Pesanan baru akan muncul di sini.' 
                     : 'Aktifkan status online untuk mulai menerima pesanan.'
@@ -534,8 +534,11 @@ export default function DriverDashboard() {
                 </p>
                 {!driverOnline && (
                   <Button 
-                    onClick={() => setDriverOnline(true)}
-                    className="bg-green-500 hover:bg-green-600 font-bold"
+                    onClick={() => {
+                      setDriverOnline(true);
+                      updateDriverStatusMutation.mutate(true);
+                    }}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold shadow-lg"
                   >
                     <Power className="w-4 h-4 mr-2" />
                     Mulai Online
@@ -550,29 +553,29 @@ export default function DriverDashboard() {
         {activeTab === "order" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg text-white">Riwayat Pesanan</h3>
-              <Filter className="w-5 h-5 text-gray-400" />
+              <h3 className="font-bold text-lg text-gray-800">Riwayat Pesanan</h3>
+              <Filter className="w-5 h-5 text-orange-500" />
             </div>
             
             {/* Filter Status */}
             <div className="grid grid-cols-3 gap-2">
               <Button 
                 variant={orderFilter === 'all' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'all' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                className={`text-xs ${orderFilter === 'all' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
                 onClick={() => setOrderFilter('all')}
               >
                 Semua ({orders.length})
               </Button>
               <Button 
                 variant={orderFilter === 'completed' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'completed' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                className={`text-xs ${orderFilter === 'completed' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
                 onClick={() => setOrderFilter('completed')}
               >
                 Selesai ({orders.filter(o => o.status === 'delivered').length})
               </Button>
               <Button 
                 variant={orderFilter === 'cancelled' ? 'default' : 'outline'} 
-                className={`text-xs ${orderFilter === 'cancelled' ? 'bg-yellow-400 text-gray-900' : 'border-gray-600 text-gray-300'}`}
+                className={`text-xs ${orderFilter === 'cancelled' ? 'bg-orange-500 text-white' : 'border-orange-300 text-orange-600'}`}
                 onClick={() => setOrderFilter('cancelled')}
               >
                 Dibatalkan ({orders.filter(o => o.status === 'cancelled').length})
@@ -581,38 +584,38 @@ export default function DriverDashboard() {
 
             {/* Statistics */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold text-yellow-400">{orders.filter(o => o.status === 'delivered').length}</p>
-                <p className="text-xs text-gray-400">Total Selesai</p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-orange-200">
+                <p className="text-2xl font-bold text-orange-600">{orders.filter(o => o.status === 'delivered').length}</p>
+                <p className="text-xs text-gray-600">Total Selesai</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <p className="text-2xl font-bold text-green-400">{formatCurrency(todayEarnings)}</p>
-                <p className="text-xs text-gray-400">Hari Ini</p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-3 text-center shadow-lg border border-green-200">
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(todayEarnings)}</p>
+                <p className="text-xs text-gray-600">Hari Ini</p>
               </div>
             </div>
 
             {/* List Order */}
             <div className="space-y-3">
               {filteredOrders.slice(0, 10).map((order) => (
-                <div key={order.id} className="bg-gray-800 rounded-lg p-4">
+                <div key={order.id} className="bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-orange-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Order #{order.id}</span>
-                    <div className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(order.status)} text-gray-900`}>
+                    <span className="text-sm font-medium text-gray-800">Order #{order.id}</span>
+                    <div className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(order.status)} text-white`}>
                       {order.status === 'delivered' ? 'SELESAI' :
                        order.status === 'cancelled' ? 'DIBATALKAN' :
                        order.status.toUpperCase()}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mb-2">📍 {order.deliveryAddress}</p>
+                  <p className="text-xs text-gray-600 mb-2">📍 {order.deliveryAddress}</p>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                      <span className="text-yellow-400 font-bold">{formatCurrency(order.deliveryFee || 0)}</span>
+                      <span className="text-orange-600 font-bold">{formatCurrency(order.deliveryFee || 0)}</span>
                       {order.status === 'delivered' && (
-                        <Star className="w-3 h-3 text-yellow-400" />
+                        <Star className="w-3 h-3 text-orange-500" />
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-600">
                         {order.createdAt ? new Date(order.createdAt).toLocaleDateString('id-ID') : ''}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -624,9 +627,9 @@ export default function DriverDashboard() {
               ))}
               
               {filteredOrders.length === 0 && (
-                <div className="bg-gray-800 rounded-lg p-8 text-center">
-                  <Package className="w-12 h-12 text-gray-600 mx-auto mb-2" />
-                  <p className="text-gray-400">
+                <div className="bg-white/80 backdrop-blur-sm rounded-lg p-8 text-center shadow-lg border border-orange-200">
+                  <Package className="w-12 h-12 text-orange-400 mx-auto mb-2" />
+                  <p className="text-gray-600">
                     {orderFilter === 'all' ? 'Belum ada riwayat pesanan' :
                      orderFilter === 'completed' ? 'Belum ada pesanan selesai' :
                      'Belum ada pesanan dibatalkan'}
@@ -1498,7 +1501,7 @@ export default function DriverDashboard() {
           <button
             onClick={() => setActiveTab("order")}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              activeTab === "order" ? "text-yellow-400" : "text-gray-500"
+              activeTab === "order" ? "text-orange-600" : "text-gray-500"
             }`}
           >
             <Package className="w-5 h-5" />
@@ -1508,7 +1511,7 @@ export default function DriverDashboard() {
           <button
             onClick={() => setActiveTab("dompet")}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              activeTab === "dompet" ? "text-yellow-400" : "text-gray-500"
+              activeTab === "dompet" ? "text-orange-600" : "text-gray-500"
             }`}
           >
             <Wallet className="w-5 h-5" />
@@ -1518,7 +1521,7 @@ export default function DriverDashboard() {
           <button
             onClick={() => setActiveTab("profil")}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              activeTab === "profil" ? "text-yellow-400" : "text-gray-500"
+              activeTab === "profil" ? "text-orange-600" : "text-gray-500"
             }`}
           >
             <User className="w-5 h-5" />
@@ -1528,7 +1531,7 @@ export default function DriverDashboard() {
           <button
             onClick={() => setActiveTab("pengaturan")}
             className={`flex flex-col items-center justify-center space-y-1 ${
-              activeTab === "pengaturan" ? "text-yellow-400" : "text-gray-500"
+              activeTab === "pengaturan" ? "text-orange-600" : "text-gray-500"
             }`}
           >
             <Settings className="w-5 h-5" />
