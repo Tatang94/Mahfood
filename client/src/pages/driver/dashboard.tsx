@@ -228,8 +228,37 @@ export default function DriverDashboard() {
   };
 
   const handleProfileSave = () => {
+    if (!profileData.name.trim()) {
+      toast({ title: "Nama tidak boleh kosong", variant: "destructive" });
+      return;
+    }
+    if (!profileData.phone.trim()) {
+      toast({ title: "Nomor telepon tidak boleh kosong", variant: "destructive" });
+      return;
+    }
+    if (!profileData.vehicleType) {
+      toast({ title: "Jenis kendaraan harus dipilih", variant: "destructive" });
+      return;
+    }
+    if (!profileData.vehicleNumber.trim()) {
+      toast({ title: "Nomor polisi tidak boleh kosong", variant: "destructive" });
+      return;
+    }
+    
     updateProfileMutation.mutate(profileData);
   };
+
+  // Initialize profile data when component mounts or user data changes
+  useEffect(() => {
+    if (user && driverData) {
+      setProfileData({
+        name: user.name || '',
+        phone: user.phone || '',
+        vehicleType: driverData.vehicleType || '',
+        vehicleNumber: driverData.vehicleNumber || ''
+      });
+    }
+  }, [user, driverData]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
