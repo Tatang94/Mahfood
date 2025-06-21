@@ -1277,39 +1277,9 @@ export default function DriverDashboard() {
                 </div>
               </div>
               
-              {/* Sync Status Button */}
-              <div className="mt-4 p-3 bg-gray-700 rounded">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-medium">Kontrol Status Kerja</span>
-                    <p className="text-xs text-gray-400">Sinkron dengan tombol di header</p>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      const newStatus = !driverOnline;
-                      setDriverOnline(newStatus);
-                      updateDriverStatusMutation.mutate(newStatus);
-                    }}
-                    disabled={updateDriverStatusMutation.isPending}
-                    className={`px-4 py-2 rounded-full text-sm font-bold ${
-                      driverOnline 
-                        ? 'bg-red-500 hover:bg-red-600 text-white' 
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                    }`}
-                  >
-                    {updateDriverStatusMutation.isPending ? 
-                      'Mengubah...' : 
-                      (driverOnline ? 'Set OFFLINE' : 'Set ONLINE')
-                    }
-                  </Button>
-                </div>
-              </div>
-              
               {/* Status Info */}
-              <div className="mt-3 text-xs text-gray-400">
-                <p>• Status tersinkron otomatis dengan header</p>
-                <p>• Perubahan disimpan ke database real-time</p>
-                <p>• Status online diperlukan untuk menerima pesanan</p>
+              <div className="mt-3 text-xs text-gray-400 text-center">
+                <p>Status tersinkron otomatis dengan header dan tersimpan real-time</p>
               </div>
             </div>
 
