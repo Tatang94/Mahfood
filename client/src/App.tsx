@@ -100,6 +100,17 @@ function Router() {
       {/* Driver Routes */}
       <Route path="/driver/login" component={DriverLogin} />
       <Route path="/driver/signin" component={DriverSignIn} />
+      <Route path="/driver/dashboard" component={() => {
+        if (!isAuthenticated) {
+          window.location.href = '/driver/login';
+          return null;
+        }
+        if (user?.role !== 'driver') {
+          window.location.href = '/';
+          return null;
+        }
+        return <DriverDashboard />;
+      }} />
       <Route path="/driver" component={() => {
         if (!isAuthenticated) {
           window.location.href = '/driver/login';

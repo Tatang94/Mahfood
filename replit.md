@@ -106,6 +106,14 @@ The application is configured for multiple deployment targets:
   - Implemented conditional UI showing "Aktifkan" button when wallet is inactive
   - Added automatic wallet data refresh after successful activation
 
+- January 15, 2025: Redesigned driver dashboard with Maxim-style interface
+  - Implemented dark theme with yellow accents for mobile-first design
+  - Added clean header with driver profile, online/offline status toggle
+  - Created active order detail section with pickup/destination points
+  - Integrated action buttons: Terima Order, Sudah Tiba, Mulai Perjalanan, Selesai
+  - Added bottom navigation with Beranda, Order, Dompet, Profil, Pengaturan tabs
+  - Included map placeholder for route navigation and directions
+
 ## Changelog
 
 - June 21, 2025. Initial setup
