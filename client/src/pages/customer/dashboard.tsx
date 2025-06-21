@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import TopUpModal from "@/components/topup-modal";
+import ActivateTasPayModal from "@/components/activate-taspay-modal";
 import { 
   Search,
   Wallet,
@@ -55,6 +56,7 @@ export default function CustomerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
+  const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
@@ -587,18 +589,32 @@ export default function CustomerDashboard() {
                       </div>
                       <div>
                         <span className="font-medium">TasPay</span>
-                        <p className="text-sm text-gray-600">
-                          Saldo: Rp {walletBalance.toLocaleString('id-ID')}
-                        </p>
+                        {walletData?.isActive ? (
+                          <p className="text-sm text-gray-600">
+                            Saldo: Rp {walletBalance.toLocaleString('id-ID')}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-red-600">Belum aktif</p>
+                        )}
                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
-                      onClick={() => setIsTopUpModalOpen(true)}
-                    >
-                      Top Up
-                    </Button>
+                    {walletData?.isActive ? (
+                      <Button 
+                        size="sm" 
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                        onClick={() => setIsTopUpModalOpen(true)}
+                      >
+                        Top Up
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                        onClick={() => setIsActivateModalOpen(true)}
+                      >
+                        Aktifkan
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -630,6 +646,12 @@ export default function CustomerDashboard() {
       <TopUpModal 
         isOpen={isTopUpModalOpen} 
         onClose={() => setIsTopUpModalOpen(false)} 
+      />
+
+      {/* Activate TasPay Modal */}
+      <ActivateTasPayModal 
+        isOpen={isActivateModalOpen} 
+        onClose={() => setIsActivateModalOpen(false)} 
       />
 
       {/* Bottom Navigation */}

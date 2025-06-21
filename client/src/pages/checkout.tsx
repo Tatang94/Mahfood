@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import ActivateTasPayModal from "@/components/activate-taspay-modal";
 import { 
   CreditCard, 
   MapPin, 
@@ -40,6 +41,7 @@ export default function Checkout() {
 
   const [userWallet, setUserWallet] = useState({ balance: 0, isActive: false });
   const [tasPayPin, setTasPayPin] = useState("");
+  const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
 
   // Fetch user wallet data
   useEffect(() => {
@@ -360,12 +362,7 @@ export default function Checkout() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => {
-                            toast({
-                              title: "Fitur TasPay",
-                              description: "Fitur aktivasi TasPay akan segera tersedia",
-                            });
-                          }}
+                          onClick={() => setIsActivateModalOpen(true)}
                         >
                           Aktifkan TasPay
                         </Button>
@@ -471,6 +468,29 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* Activate TasPay Modal */}
+      <ActivateTasPayModal 
+        isOpen={isActivateModalOpen} 
+        onClose={() => {
+          setIsActivateModalOpen(false);
+          // Refresh wallet data after activation
+          if (user?.id) {
+            fetch('/api/wallet', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            })
+            .then(res => res.json())
+            .then(data => {
+              setUserWallet({ balance: data.balance || 0, isActive: data.isActive || false });
+            })
+            .catch(err => {
+              console.error('Failed to refresh wallet:', err);
+            });
+          }
+        }} 
+      />
     </div>
   );
 }

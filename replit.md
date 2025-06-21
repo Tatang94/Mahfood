@@ -99,6 +99,13 @@ The application is configured for multiple deployment targets:
   - Added TopUpModal component with real-time transaction status checking
   - Integrated top up feature into customer dashboard payment section
 
+- January 15, 2025: Created TasPay activation feature
+  - Built ActivateTasPayModal component for secure PIN creation
+  - Added wallet activation endpoint with PIN hashing for security
+  - Integrated activation feature into customer dashboard and checkout page
+  - Implemented conditional UI showing "Aktifkan" button when wallet is inactive
+  - Added automatic wallet data refresh after successful activation
+
 ## Changelog
 
 - June 21, 2025. Initial setup
