@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { storage } from "../storage";
 import { insertUserSchema, insertDriverSchema, insertRestaurantSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
@@ -150,7 +150,7 @@ export function registerAuthRoutes(app: Express) {
         token
       });
     } catch (error) {
-      
+      console.error('Register error:', error);
       res.status(500).json({ message: "Gagal melakukan registrasi" });
     }
   });
@@ -204,15 +204,15 @@ export function registerAuthRoutes(app: Express) {
         token
       });
     } catch (error) {
-      
+      console.error('Login error:', error);
       res.status(500).json({ message: "Gagal melakukan login" });
     }
   });
 
   // Get current user
-  app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  app.get('/api/auth/me', authenticateToken, async (req: AuthRequest, res: any) => {
     try {
-      const user = await storage.getUserById(req.user.userId);
+      const user = await storage.getUserById(req.user!.userId);
       if (!user) {
         return res.status(404).json({ message: "User tidak ditemukan" });
       }
@@ -249,10 +249,19 @@ export function registerAuthRoutes(app: Express) {
   });
 }
 
+// Extend Request interface
+interface AuthRequest extends Request {
+  user?: {
+    userId: number;
+    email: string;
+    role: string;
+  };
+}
+
 // Middleware to authenticate JWT token
-export function authenticateToken(req: any, res: any, next: any) {
+export function authenticateToken(req: AuthRequest, res: any, next: any) {
   try {
-    const authHeader = req.headers['authorization'];
+    const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
