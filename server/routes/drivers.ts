@@ -169,7 +169,7 @@ export function registerDriverRoutes(app: Express) {
         type: 'withdrawal'
       });
 
-      res.json({ message: "Withdrawal successful", newBalance: currentEarnings - amount });
+      res.json({ message: "successful", newBalance: (currentEarnings ?? 0) - amount });
     } catch (error) {
       console.error('Error processing withdrawal:', error);
       res.status(500).json({ message: "Failed to process withdrawal" });
