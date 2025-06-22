@@ -25,7 +25,7 @@ import {
   Settings,
   Power,
   UserCheck,
-  Route,
+  SteeringWheel,
   Target,
   Timer,
   Edit,
