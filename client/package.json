@@ -21,6 +21,7 @@
     "@radix-ui/react-toast": "^1.0.7",
     "@radix-ui/react-scroll-area": "^1.0.5",
     "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-select": "^1.0.5",
     "tailwind-merge": "^2.2.1",
     "lucide-react": "^0.276.0",
     "class-variance-authority": "^0.7.0"
