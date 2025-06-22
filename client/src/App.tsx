@@ -96,6 +96,17 @@ function Router() {
       <Route path="/restaurant/login" component={RestaurantLogin} />
       <Route path="/restaurant/signin" component={RestaurantSignIn} />
       <Route path="/restaurant/register" component={RestaurantRegister} />
+      <Route path="/restaurant/dashboard" component={() => {
+        if (!isAuthenticated) {
+          window.location.href = '/restaurant/login';
+          return null;
+        }
+        if (user?.role !== 'restaurant') {
+          window.location.href = '/';
+          return null;
+        }
+        return <RestaurantDashboard />;
+      }} />
       <Route path="/restaurant" component={() => {
         if (!isAuthenticated) {
           window.location.href = '/restaurant/login';
