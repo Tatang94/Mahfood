@@ -3,74 +3,97 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import AddMenuModal from "@/components/add-menu-modal";
 import LoginModal from "@/components/login-modal";
 import { 
-  Home,
-  ShoppingBag,
-  UtensilsCrossed,
-  Tag,
-  User,
-  DollarSign,
+  Bell,
+  ChefHat,
   Clock,
   CheckCircle,
-  Package,
-  AlertCircle,
+  MapPin,
+  Users,
+  Timer,
+  Phone,
   ArrowUp,
-  Bell,
-  Settings,
-  Plus,
-  Edit,
-  Eye,
-  LogOut
+  Store,
+  TrendingUp,
+  Activity,
+  User,
+  ShoppingBag,
+  DollarSign
 } from "lucide-react";
 
+interface TabButtonProps {
+  id: string;
+  icon: React.ElementType;
+  label: string;
+  isActive: boolean;
+  onClick: (id: string) => void;
+  badge?: number;
+}
+
+function TabButton({ id, icon: Icon, label, isActive, onClick, badge }: TabButtonProps) {
+  return (
+    <button
+      onClick={() => onClick(id)}
+      className={`flex flex-col items-center justify-center py-2 px-1 min-h-[60px] transition-colors relative ${
+        isActive 
+          ? 'text-green-600 bg-green-50' 
+          : 'text-gray-600 hover:text-gray-900'
+      }`}
+    >
+      <Icon className="w-6 h-6 mb-1" />
+      <span className="text-xs font-medium">{label}</span>
+      {badge && badge > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function RestaurantDashboard() {
-  const [activeTab, setActiveTab] = useState("beranda");
-  const [restaurantId, setRestaurantId] = useState<number | null>(null);
-  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("pesanan");
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, logout, isLoading: authLoading } = useAuth();
 
-  // Show login modal if not authenticated
+  // Authentication checks
   useEffect(() => {
     if (!authLoading && !user) {
       setShowLoginModal(true);
     }
   }, [user, authLoading]);
 
-  // Close login modal when user logs in
   useEffect(() => {
     if (user && user.role === 'restaurant') {
       setShowLoginModal(false);
     }
   }, [user]);
 
-  // Redirect if user is not restaurant
   useEffect(() => {
     if (user && user.role !== 'restaurant') {
       window.location.href = `/${user.role}`;
     }
   }, [user]);
 
-  // Show loading state while authentication is loading
+  // Authentication loading state
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat dashboard restoran...</p>
         </div>
       </div>
     );
   }
 
-  // Show login modal if not authenticated (without showing dashboard content)
+  // Show login modal if not authenticated
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -83,31 +106,18 @@ export default function RestaurantDashboard() {
     );
   }
 
+  // Get restaurant data
   const { data: restaurant } = useQuery({
     queryKey: ["/api/restaurants/profile", user?.id],
     queryFn: () => apiRequest(`/api/restaurants/profile?userId=${user?.id}`),
     enabled: !!user?.id,
   });
 
-  // Get restaurant stats
-  const { data: stats } = useQuery({
-    queryKey: ["/api/restaurants", (restaurant as any)?.id, "stats"],
-    queryFn: () => apiRequest(`/api/restaurants/${(restaurant as any)?.id}/stats`),
-    enabled: !!(restaurant as any)?.id,
-  });
-
   // Get restaurant orders
   const { data: orders = [] } = useQuery({
-    queryKey: ["/api/orders/restaurant", (restaurant as any)?.id],
-    queryFn: () => apiRequest(`/api/orders/restaurant?restaurantId=${(restaurant as any)?.id}`),
-    enabled: !!(restaurant as any)?.id,
-  });
-
-  // Get restaurant menu
-  const { data: menuItems = [] } = useQuery({
-    queryKey: ["/api/restaurants", (restaurant as any)?.id, "menu"],
-    queryFn: () => apiRequest(`/api/restaurants/${(restaurant as any)?.id}/menu`),
-    enabled: !!(restaurant as any)?.id,
+    queryKey: ["/api/orders/restaurant", restaurant?.id],
+    queryFn: () => apiRequest(`/api/orders/restaurant?restaurantId=${restaurant?.id}`),
+    enabled: !!restaurant?.id,
   });
 
   // Update order status mutation
@@ -120,401 +130,335 @@ export default function RestaurantDashboard() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders/restaurant"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/restaurants", (restaurant as any)?.id, "stats"] });
       toast({ title: "Status pesanan berhasil diperbarui" });
+    },
+    onError: () => {
+      toast({ title: "Gagal memperbarui status pesanan", variant: "destructive" });
     },
   });
 
-  useEffect(() => {
-    if ((restaurant as any)?.id) {
-      setRestaurantId((restaurant as any).id);
-    }
-  }, [restaurant]);
-
-  const handleAcceptOrder = (orderId: number) => {
-    updateOrderMutation.mutate({ orderId, status: "confirmed" });
-  };
-
-  // Calculate order stats from real data
-  const orderStats = {
-    pending: orders.filter((o: any) => o.status === "pending").length,
-    ongoing: orders.filter((o: any) => ["confirmed", "preparing", "ready"].includes(o.status)).length,
-    completed: orders.filter((o: any) => o.status === "delivered").length,
-    total: orders.length,
-  };
-
-  // Calculate sales data from real orders
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const todayOrders = orders.filter((o: any) => new Date(o.createdAt) >= today);
-  const yesterdayOrders = orders.filter((o: any) => {
-    const orderDate = new Date(o.createdAt);
-    return orderDate >= yesterday && orderDate < today;
+  // Calculate statistics
+  const todayOrders = orders.filter((order: any) => {
+    const orderDate = new Date(order.createdAt);
+    const today = new Date();
+    return orderDate.toDateString() === today.toDateString();
   });
 
-  const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
-  const yesterdayRevenue = yesterdayOrders.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
-  const growth = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(1) : "0";
+  const pendingOrders = orders.filter((order: any) => order.status === 'pending');
+  const activeOrders = orders.filter((order: any) => 
+    ['confirmed', 'preparing', 'ready', 'delivering'].includes(order.status)
+  );
+  const completedToday = todayOrders.filter((order: any) => order.status === 'delivered');
+  const todayRevenue = completedToday.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
 
-  const salesData = {
-    today: todayRevenue,
-    yesterday: yesterdayRevenue,
-    growth,
-    thisWeek: stats?.thisWeekRevenue || 0,
-    thisMonth: stats?.thisMonthRevenue || 0,
-  };
-
-  // Use restaurant balance or default to 0
-  const walletBalance = (restaurant as any)?.balance || 0;
-
+  // Helper functions
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'ongoing': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'preparing': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'ready': return 'bg-green-100 text-green-800 border-green-200';
+      case 'delivering': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'pending': return 'Menunggu';
-      case 'ongoing': return 'Diproses';
-      case 'completed': return 'Selesai';
+      case 'pending': return 'Menunggu Konfirmasi';
+      case 'confirmed': return 'Dikonfirmasi';
+      case 'preparing': return 'Sedang Dimasak';
+      case 'ready': return 'Siap Diambil';
+      case 'delivering': return 'Sedang Dikirim';
+      case 'delivered': return 'Sudah Dikirim';
+      case 'cancelled': return 'Dibatalkan';
       default: return status;
     }
   };
 
-  interface TabButtonProps {
-    id: string;
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    isActive: boolean;
-    onClick: (id: string) => void;
-  }
-
-  const TabButton = ({ id, icon: Icon, label, isActive, onClick }: TabButtonProps) => (
-    <button
-      onClick={() => onClick(id)}
-      className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 ${
-        isActive 
-          ? 'bg-green-50 text-green-600 border border-green-200' 
-          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-      }`}
-    >
-      <Icon className="w-5 h-5 mb-1" />
-      <span className="text-xs font-medium">{label}</span>
-    </button>
-  );
+  const getNextStatus = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'pending': return { status: 'confirmed', label: 'Konfirmasi' };
+      case 'confirmed': return { status: 'preparing', label: 'Mulai Masak' };
+      case 'preparing': return { status: 'ready', label: 'Siap Ambil' };
+      case 'ready': return { status: 'delivering', label: 'Kirim' };
+      default: return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard Mitra</h1>
-            <p className="text-sm text-gray-600">{(restaurant as any)?.name || "Loading..."}</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="p-2">
-              <Bell className="w-5 h-5 text-gray-600" />
-            </Button>
-            <Button variant="ghost" size="sm" className="p-2">
-              <Settings className="w-5 h-5 text-gray-600" />
-            </Button>
+      {/* GoBiz Style Header */}
+      <div className="bg-green-600 text-white">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Store className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">Dashboard Mitra</h1>
+                <p className="text-sm text-green-100">{restaurant?.name || 'Restoran Anda'}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                  <Bell className="w-5 h-5" />
+                </Button>
+                {pendingOrders.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {pendingOrders.length}
+                  </span>
+                )}
+              </div>
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 py-6 pb-24">
-        {activeTab === "beranda" && (
-          <div className="space-y-6">
-            {/* Ringkasan Penjualan */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Ringkasan Penjualan Hari Ini</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
-                        <p className="text-xl font-bold text-gray-900">{formatCurrency(salesData.today)}</p>
-                        <div className="flex items-center mt-1">
-                          <ArrowUp className="w-4 h-4 text-green-600" />
-                          <span className="text-sm text-green-600 font-medium">+{salesData.growth}%</span>
-                        </div>
-                      </div>
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <DollarSign className="w-6 h-6 text-green-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Pesanan</p>
-                        <p className="text-xl font-bold text-gray-900">{orderStats.total}</p>
-                        <p className="text-sm text-gray-500">{orderStats.completed} selesai</p>
-                      </div>
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <ShoppingBag className="w-6 h-6 text-blue-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Grafik Sederhana */}
-            <Card className="border-0 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Tren Penjualan 7 Hari</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-end justify-between h-24 space-x-2">
-                  {[1.8, 2.3, 1.9, 2.1, 2.8, 2.4, 2.85].map((value, index) => (
-                    <div key={index} className="flex-1 bg-green-100 rounded-t-sm relative">
-                      <div 
-                        className="bg-green-500 rounded-t-sm transition-all duration-1000"
-                        style={{ height: `${(value / 3) * 100}%` }}
-                      />
-                      <div className="text-xs text-gray-600 text-center mt-1">
-                        {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'][index]}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Saldo Dompet */}
-            <Card className="border-0 shadow-sm bg-gradient-to-r from-green-500 to-green-600">
-              <CardContent className="p-4 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm">Saldo Dompet Mitra</p>
-                    <p className="text-2xl font-bold">{formatCurrency(walletBalance)}</p>
-                    <p className="text-green-100 text-sm">Siap dicairkan</p>
-                  </div>
-                  <Button className="bg-white text-green-600 hover:bg-green-50">
-                    Tarik Saldo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Status Pesanan Masuk */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Pesanan Masuk</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setActiveTab("pesanan")}
-                  className="text-green-600"
-                >
-                  Lihat Semua
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <Card className="border-0 shadow-sm bg-orange-50">
-                  <CardContent className="p-3 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{orderStats.pending}</div>
-                    <div className="text-xs text-orange-700">Menunggu</div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm bg-blue-50">
-                  <CardContent className="p-3 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{orderStats.ongoing}</div>
-                    <div className="text-xs text-blue-700">Diproses</div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm bg-green-50">
-                  <CardContent className="p-3 text-center">
-                    <div className="text-2xl font-bold text-green-600">{orderStats.completed}</div>
-                    <div className="text-xs text-green-700">Selesai</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="space-y-3">
-                {orders.slice(0, 3).map((order: any) => (
-                  <Card key={order.id} className="border-0 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-gray-900">{order.customerName || "Customer"}</span>
-                            <Badge className={`${getStatusColor(order.status)} text-xs`}>
-                              {getStatusText(order.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {order.items?.map((item: any) => `${item.quantity}x ${item.name}`).join(", ") || "Order items"}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</span>
-                            <span className="text-xs text-gray-500">
-                              {new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • #{order.id}
-                            </span>
-                          </div>
-                        </div>
-                        {order.status === 'pending' && (
-                          <Button 
-                            size="sm" 
-                            className="ml-4 bg-green-600 hover:bg-green-700 text-white"
-                            onClick={() => handleAcceptOrder(order.id)}
-                            disabled={updateOrderMutation.isPending}
-                          >
-                            Terima
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
+      {/* Main Content */}
+      <div className="p-4 pb-20">
         {activeTab === "pesanan" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Pesanan</h2>
-            <div className="space-y-3">
-              {orders.map((order: any) => (
-                <Card key={order.id} className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-gray-900">{order.customer}</span>
-                          <Badge className={`${getStatusColor(order.status)} text-xs`}>
-                            {getStatusText(order.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{order.items}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm font-medium text-gray-900">{formatCurrency(order.total)}</span>
-                          <span className="text-xs text-gray-500">{order.time} • {order.orderId}</span>
-                        </div>
-                      </div>
-                      <div className="ml-4 space-x-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        {order.status === 'pending' && (
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                            Terima
-                          </Button>
-                        )}
-                      </div>
+            {/* Quick Stats - GoBiz Style */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-blue-100">Pesanan Baru</p>
+                      <p className="text-2xl font-bold">{pendingOrders.length}</p>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "menu" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Menu Makanan</h2>
-              <Button 
-                size="sm" 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => setShowAddMenuModal(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Menu
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {menuItems.map((item: any) => (
-                <Card key={item.id} className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                        🍽️
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium text-gray-900">{item.name}</h3>
-                          <div className="flex items-center space-x-2">
-                            <Button size="sm" variant="ghost">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600">{item.categoryId}</p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="font-semibold text-gray-900">{formatCurrency(item.price)}</span>
-                          <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-600">Tersedia</span>
-                            <div className={`flex items-center space-x-1 ${item.stock === 0 ? 'text-red-600' : 'text-green-600'}`}>
-                              <Package className="w-4 h-4" />
-                              <span className="text-sm font-medium">{item.stock === 0 ? 'Habis' : `${item.stock} tersisa`}</span>
-                            </div>
-                          </div>
-                        </div>
-                        {item.stock === 0 && (
-                          <div className="mt-2">
-                            <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              Stok Habis
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
+                  </div>
+                </CardContent>
+              </Card>
 
-        {activeTab === "promo" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Promo & Diskon</h2>
-              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Buat Promo
-              </Button>
+              <Card className="border-0 shadow-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-orange-100">Sedang Diproses</p>
+                      <p className="text-2xl font-bold">{activeOrders.length}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <ChefHat className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <Card className="border-0 shadow-sm bg-orange-50 border-orange-200">
-              <CardContent className="p-4 text-center">
-                <Tag className="w-12 h-12 text-orange-500 mx-auto mb-3" />
-                <h3 className="font-medium text-gray-900 mb-2">Belum Ada Promo Aktif</h3>
-                <p className="text-sm text-gray-600 mb-4">Buat promo menarik untuk meningkatkan penjualan Anda</p>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-                  Mulai Buat Promo
-                </Button>
+
+            {/* Revenue Stats */}
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
+                    <p className="text-lg font-bold text-green-600">{formatCurrency(todayRevenue)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Pesanan Selesai</p>
+                    <p className="text-lg font-bold text-gray-900">{completedToday.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Total Pesanan</p>
+                    <p className="text-lg font-bold text-gray-900">{orders.length}</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Orders List - GoBiz Style */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Kelola Pesanan</h3>
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  {orders.length} Total
+                </Badge>
+              </div>
+
+              {orders.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-8 text-center">
+                    <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="font-medium text-gray-900 mb-2">Belum Ada Pesanan</h3>
+                    <p className="text-sm text-gray-600">Pesanan akan muncul di sini ketika ada pelanggan yang memesan</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                orders.map((order: any) => {
+                  const nextStatus = getNextStatus(order.status);
+                  const isExpired = order.status === 'pending' && 
+                    new Date().getTime() - new Date(order.createdAt).getTime() > 10 * 60 * 1000;
+
+                  return (
+                    <Card key={order.id} className={`border-0 shadow-sm ${order.status === 'pending' ? 'ring-2 ring-blue-200' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          {/* Order Header */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <span className="font-bold text-green-600 text-sm">#{order.id}</span>
+                              </div>
+                              <div>
+                                <div className="flex items-center space-x-2">
+                                  <Badge className={getStatusColor(order.status)}>
+                                    {getStatusLabel(order.status)}
+                                  </Badge>
+                                  {isExpired && (
+                                    <Badge className="bg-red-100 text-red-800 border-red-200">
+                                      <Timer className="w-3 h-3 mr-1" />
+                                      Expired
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(order.createdAt).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg text-gray-900">{formatCurrency(order.totalAmount)}</p>
+                              <p className="text-sm text-gray-600">{order.paymentMethod === 'cash' ? 'Tunai' : 'TasPay'}</p>
+                            </div>
+                          </div>
+
+                          {/* Customer Info */}
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <Users className="w-4 h-4 text-gray-600" />
+                              <span className="text-sm font-medium text-gray-900">Pelanggan #{order.customerId}</span>
+                            </div>
+                            <div className="flex items-start space-x-2">
+                              <MapPin className="w-4 h-4 text-gray-600 mt-0.5" />
+                              <p className="text-sm text-gray-700">{order.deliveryAddress}</p>
+                            </div>
+                          </div>
+
+                          {/* Order Items */}
+                          {order.items && order.items.length > 0 && (
+                            <div className="border-t pt-3">
+                              <p className="text-sm font-medium text-gray-700 mb-2">Item Pesanan:</p>
+                              <div className="space-y-1">
+                                {order.items.map((item: any, index: number) => (
+                                  <div key={index} className="flex justify-between text-sm">
+                                    <span className="text-gray-600">{item.quantity}x {item.name}</span>
+                                    <span className="text-gray-900">{formatCurrency(item.total)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex space-x-2 pt-2">
+                            {order.status === 'pending' && (
+                              <>
+                                <Button
+                                  onClick={() => updateOrderMutation.mutate({ orderId: order.id, status: 'confirmed' })}
+                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                  disabled={updateOrderMutation.isPending}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Terima Pesanan
+                                </Button>
+                                <Button
+                                  onClick={() => updateOrderMutation.mutate({ orderId: order.id, status: 'cancelled' })}
+                                  variant="outline"
+                                  className="border-red-200 text-red-600 hover:bg-red-50"
+                                  disabled={updateOrderMutation.isPending}
+                                >
+                                  Tolak
+                                </Button>
+                              </>
+                            )}
+                            
+                            {nextStatus && order.status !== 'pending' && order.status !== 'delivered' && order.status !== 'cancelled' && (
+                              <Button
+                                onClick={() => updateOrderMutation.mutate({ orderId: order.id, status: nextStatus.status })}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={updateOrderMutation.isPending}
+                              >
+                                <ArrowUp className="w-4 h-4 mr-2" />
+                                {nextStatus.label}
+                              </Button>
+                            )}
+
+                            {order.status === 'ready' && (
+                              <Button
+                                variant="outline"
+                                className="border-green-200 text-green-600 hover:bg-green-50"
+                              >
+                                <Phone className="w-4 h-4 mr-2" />
+                                Hubungi Driver
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
-        {activeTab === "akun" && (
+        {activeTab === "analitik" && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-gray-900">Analitik Bisnis</h2>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Pendapatan</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(todayRevenue)}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Rating Restoran</p>
+                      <p className="text-2xl font-bold text-gray-900">{restaurant?.rating || 5}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-yellow-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "profil" && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Profil Restoran</h2>
             <Card className="border-0 shadow-sm">
@@ -542,19 +486,13 @@ export default function RestaurantDashboard() {
                     <label className="text-sm font-medium text-gray-700">Email</label>
                     <p className="text-gray-900">{user?.email || 'Email belum diatur'}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Profil
-                    </Button>
-                    <Button 
-                      onClick={logout}
-                      variant="outline" 
-                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
-                    >
-                      Logout
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={logout}
+                    variant="outline" 
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    Logout
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -562,58 +500,29 @@ export default function RestaurantDashboard() {
         )}
       </div>
 
-      {/* Add Menu Modal */}
-      {restaurantId && (
-        <AddMenuModal
-          isOpen={showAddMenuModal}
-          onClose={() => setShowAddMenuModal(false)}
-          restaurantId={restaurantId}
-        />
-      )}
-
-      {/* Login Modal - sama seperti dashboard customer */}
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        defaultRole="restaurant"
-      />
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-        <div className="grid grid-cols-5 gap-1">
-          <TabButton 
-            id="beranda" 
-            icon={Home} 
-            label="Beranda" 
-            isActive={activeTab === "beranda"}
-            onClick={setActiveTab}
-          />
+      {/* Bottom Navigation - GoBiz Style */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2">
+        <div className="grid grid-cols-3 gap-1">
           <TabButton 
             id="pesanan" 
             icon={ShoppingBag} 
             label="Pesanan" 
             isActive={activeTab === "pesanan"}
             onClick={setActiveTab}
+            badge={pendingOrders.length}
           />
           <TabButton 
-            id="menu" 
-            icon={UtensilsCrossed} 
-            label="Menu" 
-            isActive={activeTab === "menu"}
+            id="analitik" 
+            icon={TrendingUp} 
+            label="Analitik" 
+            isActive={activeTab === "analitik"}
             onClick={setActiveTab}
           />
           <TabButton 
-            id="promo" 
-            icon={Tag} 
-            label="Promo" 
-            isActive={activeTab === "promo"}
-            onClick={setActiveTab}
-          />
-          <TabButton 
-            id="akun" 
+            id="profil" 
             icon={User} 
-            label="Akun" 
-            isActive={activeTab === "akun"}
+            label="Profil" 
+            isActive={activeTab === "profil"}
             onClick={setActiveTab}
           />
         </div>
