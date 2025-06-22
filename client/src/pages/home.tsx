@@ -62,7 +62,7 @@ export default function Home() {
                 <div className="relative">
                   {/* Delivery Person */}
                   <div className="text-6xl md:text-8xl mb-4 animate-bounce">
-                    🛵
+                    🚴
                   </div>
                   {/* Package */}
                   <div className="absolute -top-8 -right-4 text-3xl md:text-4xl animate-pulse">

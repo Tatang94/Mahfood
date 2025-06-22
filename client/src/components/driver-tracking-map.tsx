@@ -70,7 +70,7 @@ const createDriverIcon = (driverName: string, isOnline: boolean) => {
         ${pulse}
         position: relative;
       ">
-        🏍️
+        🚴
         ${isOnline ? `
         <div style="
           position: absolute;

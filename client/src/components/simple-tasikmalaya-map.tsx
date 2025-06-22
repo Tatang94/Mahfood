@@ -371,7 +371,7 @@ export default function SimpleTasikmalayaMap({
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">🏍️ {driver.name}</p>
+                      <p className="font-medium">🚴 {driver.name}</p>
                       <p className="text-sm text-gray-600">{driver.vehicleNumber}</p>
                     </div>
                     <div className="text-right">
@@ -396,7 +396,7 @@ export default function SimpleTasikmalayaMap({
                 <div key={driver.id} className="p-3 border rounded-lg opacity-60">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">🏍️ {driver.name}</p>
+                      <p className="font-medium">🚴 {driver.name}</p>
                       <p className="text-sm text-gray-600">{driver.vehicleNumber}</p>
                     </div>
                     <div className="text-right">

@@ -192,6 +192,7 @@ export default function DriverLogin() {
                   <Label htmlFor="vehicle">Jenis Kendaraan</Label>
                   <select name="vehicleType" className="w-full p-2 border border-gray-300 rounded-md" required>
                     <option value="">Pilih kendaraan</option>
+                    <option value="bicycle">Sepeda</option>
                     <option value="motorcycle">Motor</option>
                     <option value="car">Mobil</option>
                   </select>

@@ -38,7 +38,7 @@ const createDriverIcon = () => {
         font-size: 18px;
         animation: pulse 2s infinite;
       ">
-        🏍️
+        🚴
       </div>
       <style>
         @keyframes pulse {
