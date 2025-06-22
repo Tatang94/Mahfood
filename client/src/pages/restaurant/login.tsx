@@ -30,7 +30,7 @@ export default function RestaurantLogin() {
 
     try {
       const result = await login(email, password);
-      if (result.user.role !== 'restaurant') {
+      if (result?.user?.role !== 'restaurant') {
         toast({
           title: "Login Gagal",
           description: "Akun ini bukan akun restoran",
@@ -46,9 +46,10 @@ export default function RestaurantLogin() {
         window.location.href = "/restaurant/dashboard";
       }, 1000);
     } catch (error: any) {
+      console.error('Restaurant login error:', error);
       toast({
         title: "Login Gagal",
-        description: error.message,
+        description: error?.message || "Terjadi kesalahan saat login",
         variant: "destructive",
       });
     } finally {
