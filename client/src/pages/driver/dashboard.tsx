@@ -354,7 +354,7 @@ export default function DriverDashboard() {
       return;
     }
     if (!profileData.vehicleNumber.trim()) {
-      toast({ title: "Nomor polisi tidak boleh kosong", variant: "destructive" });
+      toast({ title: "Identitas kendaraan tidak boleh kosong", variant: "destructive" });
       return;
     }
     
@@ -907,7 +907,7 @@ export default function DriverDashboard() {
                         <span className="text-gray-700">{driverData?.vehicleType || profileData.vehicleType || 'Belum diatur'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Nomor Polisi</span>
+                        <span className="text-gray-500">Identitas Kendaraan</span>
                         <span className="text-gray-700">{driverData?.vehicleNumber || profileData.vehicleNumber || 'Belum diatur'}</span>
                       </div>
                     </div>

@@ -199,18 +199,23 @@ export default function DriverLogin() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vehicleNumber">Nomor Plat</Label>
+                  <Label htmlFor="vehicleNumber">Identitas Kendaraan</Label>
                   <div className="relative">
                     <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       id="vehicleNumber"
                       name="vehicleNumber"
                       type="text"
-                      placeholder="B 1234 ABC"
+                      placeholder="Merek/Model Sepeda atau Nomor Plat"
                       className="pl-10"
                       required
                     />
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Untuk sepeda: tulis merek/model (contoh: Polygon, United, dll)
+                    <br />
+                    Untuk motor/mobil: nomor plat kendaraan
+                  </p>
                 </div>
 
                 <div className="space-y-2">

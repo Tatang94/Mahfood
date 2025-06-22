@@ -168,6 +168,7 @@ export default function DriverRegister() {
                     <SelectValue placeholder="Pilih jenis kendaraan" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="bicycle">Sepeda</SelectItem>
                     <SelectItem value="motorcycle">Motor</SelectItem>
                     <SelectItem value="car">Mobil</SelectItem>
                   </SelectContent>
@@ -176,20 +177,25 @@ export default function DriverRegister() {
 
               <div className="space-y-2">
                 <Label htmlFor="vehicleNumber" className="text-sm font-medium text-gray-700">
-                  Nomor Plat Kendaraan
+                  Identitas Kendaraan
                 </Label>
                 <div className="relative">
                   <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
                     id="vehicleNumber"
                     type="text"
-                    placeholder="B 1234 CD"
+                    placeholder="Merek/Model Sepeda atau Nomor Plat"
                     value={formData.vehicleNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, vehicleNumber: e.target.value }))}
                     className="pl-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                     required
                   />
                 </div>
+                <p className="text-xs text-gray-500">
+                  Untuk sepeda: tulis merek/model (contoh: Polygon, United, dll)
+                  <br />
+                  Untuk motor/mobil: nomor plat kendaraan
+                </p>
               </div>
 
               <div className="space-y-2">
