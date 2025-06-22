@@ -3,26 +3,29 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import AddMenuModal from "@/components/add-menu-modal";
 import LoginModal from "@/components/login-modal";
 import { 
-  Bell,
-  ChefHat,
+  Home,
+  ShoppingBag,
+  UtensilsCrossed,
+  Tag,
+  User,
+  DollarSign,
   Clock,
   CheckCircle,
-  MapPin,
-  Users,
-  Timer,
-  Phone,
+  Package,
+  AlertCircle,
   ArrowUp,
-  Store,
-  TrendingUp,
-  Activity,
-  User,
-  ShoppingBag,
-  DollarSign
+  Bell,
+  Settings,
+  Plus,
+  Edit,
+  Eye,
+  LogOut
 } from "lucide-react";
 
 interface TabButtonProps {
@@ -196,34 +199,33 @@ export default function RestaurantDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (restaurant) {
+      setRestaurantId(restaurant.id);
+    }
+  }, [restaurant]);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* GoBiz Style Header */}
-      <div className="bg-green-600 text-white">
+      {/* TasFood Header */}
+      <div className="bg-white shadow-sm border-b">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Store className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                <UtensilsCrossed className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Dashboard Mitra</h1>
-                <p className="text-sm text-green-100">{restaurant?.name || 'Restoran Anda'}</p>
+                <h1 className="text-lg font-semibold text-gray-900">Dashboard Restoran</h1>
+                <p className="text-sm text-gray-600">{restaurant?.name || 'Restoran Anda'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="relative">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                  <Bell className="w-5 h-5" />
-                </Button>
-                {pendingOrders.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {pendingOrders.length}
-                  </span>
-                )}
-              </div>
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <Button variant="ghost" size="sm">
+                <Bell className="w-5 h-5" />
+              </Button>
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-600" />
               </div>
             </div>
           </div>
@@ -232,64 +234,89 @@ export default function RestaurantDashboard() {
 
       {/* Main Content */}
       <div className="p-4 pb-20">
-        {activeTab === "pesanan" && (
-          <div className="space-y-4">
-            {/* Quick Stats - GoBiz Style */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="border-0 shadow-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        {activeTab === "beranda" && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="border-0 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-100">Pesanan Baru</p>
-                      <p className="text-2xl font-bold">{pendingOrders.length}</p>
+                      <p className="text-sm text-gray-600">Pesanan Hari Ini</p>
+                      <p className="text-2xl font-bold text-gray-900">{todayOrders.length}</p>
                     </div>
-                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Bell className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <ShoppingBag className="w-5 h-5 text-blue-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+              <Card className="border-0 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-orange-100">Sedang Diproses</p>
-                      <p className="text-2xl font-bold">{activeOrders.length}</p>
+                      <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
+                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(todayRevenue)}</p>
                     </div>
-                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                      <ChefHat className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-green-600" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Revenue Stats */}
+            {/* Chart Placeholder */}
             <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">Tren Penjualan 7 Hari Terakhir</CardTitle>
+              </CardHeader>
               <CardContent className="p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
-                    <p className="text-lg font-bold text-green-600">{formatCurrency(todayRevenue)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Pesanan Selesai</p>
-                    <p className="text-lg font-bold text-gray-900">{completedToday.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Total Pesanan</p>
-                    <p className="text-lg font-bold text-gray-900">{orders.length}</p>
-                  </div>
+                <div className="h-40 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Grafik Penjualan</p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Orders List - GoBiz Style */}
+            {/* Recent Orders */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">Pesanan Terbaru</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {orders.slice(0, 5).map((order: any) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <span className="font-bold text-orange-600 text-xs">#{order.id}</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Customer #{order.customerId}</p>
+                          <p className="text-xs text-gray-600">{new Date(order.createdAt).toLocaleString('id-ID')}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-gray-900">{formatCurrency(order.totalAmount)}</p>
+                        <Badge className={getStatusColor(order.status)}>
+                          {getStatusLabel(order.status)}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "pesanan" && (
+          <div className="space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Kelola Pesanan</h3>
-                <Badge className="bg-green-100 text-green-800 border-green-200">
+                <Badge className="bg-orange-100 text-orange-800 border-orange-200">
                   {orders.length} Total
                 </Badge>
               </div>
@@ -374,7 +401,7 @@ export default function RestaurantDashboard() {
                               <>
                                 <Button
                                   onClick={() => updateOrderMutation.mutate({ orderId: order.id, status: 'confirmed' })}
-                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                  className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
                                   disabled={updateOrderMutation.isPending}
                                 >
                                   <CheckCircle className="w-4 h-4 mr-2" />
@@ -394,7 +421,7 @@ export default function RestaurantDashboard() {
                             {nextStatus && order.status !== 'pending' && order.status !== 'delivered' && order.status !== 'cancelled' && (
                               <Button
                                 onClick={() => updateOrderMutation.mutate({ orderId: order.id, status: nextStatus.status })}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
                                 disabled={updateOrderMutation.isPending}
                               >
                                 <ArrowUp className="w-4 h-4 mr-2" />
@@ -405,7 +432,7 @@ export default function RestaurantDashboard() {
                             {order.status === 'ready' && (
                               <Button
                                 variant="outline"
-                                className="border-green-200 text-green-600 hover:bg-green-50"
+                                className="border-orange-200 text-orange-600 hover:bg-orange-50"
                               >
                                 <Phone className="w-4 h-4 mr-2" />
                                 Hubungi Driver
@@ -422,43 +449,58 @@ export default function RestaurantDashboard() {
           </div>
         )}
 
-        {activeTab === "analitik" && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-gray-900">Analitik Bisnis</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <Card className="border-0 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Pendapatan</p>
-                      <p className="text-2xl font-bold text-gray-900">{formatCurrency(todayRevenue)}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Rating Restoran</p>
-                      <p className="text-2xl font-bold text-gray-900">{restaurant?.rating || 5}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <Activity className="w-5 h-5 text-yellow-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {activeTab === "menu" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Menu Restoran</h2>
+              <Button 
+                onClick={() => setShowAddMenuModal(true)}
+                size="sm" 
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Menu
+              </Button>
             </div>
+            <Card className="border-0 shadow-sm bg-orange-50 border-orange-200">
+              <CardContent className="p-4 text-center">
+                <UtensilsCrossed className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+                <h3 className="font-medium text-gray-900 mb-2">Kelola Menu Restoran</h3>
+                <p className="text-sm text-gray-600 mb-4">Tambah, edit, atau hapus item menu untuk restoran Anda</p>
+                <Button 
+                  onClick={() => setShowAddMenuModal(true)}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  Tambah Menu Pertama
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {activeTab === "profil" && (
+        {activeTab === "promo" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Promo & Diskon</h2>
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Buat Promo
+              </Button>
+            </div>
+            <Card className="border-0 shadow-sm bg-orange-50 border-orange-200">
+              <CardContent className="p-4 text-center">
+                <Tag className="w-12 h-12 text-orange-500 mx-auto mb-3" />
+                <h3 className="font-medium text-gray-900 mb-2">Belum Ada Promo Aktif</h3>
+                <p className="text-sm text-gray-600 mb-4">Buat promo menarik untuk meningkatkan penjualan Anda</p>
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+                  Mulai Buat Promo
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "akun" && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Profil Restoran</h2>
             <Card className="border-0 shadow-sm">
@@ -478,7 +520,7 @@ export default function RestaurantDashboard() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Status</label>
-                    <Badge className={`${restaurant?.isActive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
+                    <Badge className={`${restaurant?.isActive ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
                       {restaurant?.isActive ? 'Aktif' : 'Tidak Aktif'}
                     </Badge>
                   </div>
@@ -486,13 +528,19 @@ export default function RestaurantDashboard() {
                     <label className="text-sm font-medium text-gray-700">Email</label>
                     <p className="text-gray-900">{user?.email || 'Email belum diatur'}</p>
                   </div>
-                  <Button 
-                    onClick={logout}
-                    variant="outline" 
-                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                  >
-                    Logout
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profil
+                    </Button>
+                    <Button 
+                      onClick={logout}
+                      variant="outline" 
+                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      Logout
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -500,9 +548,25 @@ export default function RestaurantDashboard() {
         )}
       </div>
 
-      {/* Bottom Navigation - GoBiz Style */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2">
-        <div className="grid grid-cols-3 gap-1">
+      {/* Add Menu Modal */}
+      {restaurantId && (
+        <AddMenuModal
+          isOpen={showAddMenuModal}
+          onClose={() => setShowAddMenuModal(false)}
+          restaurantId={restaurantId}
+        />
+      )}
+
+      {/* Bottom Navigation - TasFood Style */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
+        <div className="grid grid-cols-5 gap-1">
+          <TabButton 
+            id="beranda" 
+            icon={Home} 
+            label="Beranda" 
+            isActive={activeTab === "beranda"}
+            onClick={setActiveTab}
+          />
           <TabButton 
             id="pesanan" 
             icon={ShoppingBag} 
@@ -512,17 +576,24 @@ export default function RestaurantDashboard() {
             badge={pendingOrders.length}
           />
           <TabButton 
-            id="analitik" 
-            icon={TrendingUp} 
-            label="Analitik" 
-            isActive={activeTab === "analitik"}
+            id="menu" 
+            icon={UtensilsCrossed} 
+            label="Menu" 
+            isActive={activeTab === "menu"}
             onClick={setActiveTab}
           />
           <TabButton 
-            id="profil" 
+            id="promo" 
+            icon={Tag} 
+            label="Promo" 
+            isActive={activeTab === "promo"}
+            onClick={setActiveTab}
+          />
+          <TabButton 
+            id="akun" 
             icon={User} 
-            label="Profil" 
-            isActive={activeTab === "profil"}
+            label="Akun" 
+            isActive={activeTab === "akun"}
             onClick={setActiveTab}
           />
         </div>
