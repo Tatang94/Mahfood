@@ -94,15 +94,8 @@ function Router() {
         return <RestaurantDashboard />;
       }} />
       <Route path="/restaurant" component={() => {
-        if (!isAuthenticated) {
-          window.location.href = '/restaurant/login';
-          return null;
-        }
-        if (user?.role !== 'restaurant') {
-          window.location.href = '/';
-          return null;
-        }
-        return <RestaurantDashboard />;
+        window.location.href = '/restaurant/dashboard';
+        return null;
       }} />
       <Route component={NotFound} />
     </Switch>

@@ -66,7 +66,7 @@ export default function DriverRegister() {
       });
 
       setTimeout(() => {
-        window.location.href = '/driver/dashboard';
+        window.location.href = '/driver';
       }, 1500);
     } catch (error: any) {
       toast({

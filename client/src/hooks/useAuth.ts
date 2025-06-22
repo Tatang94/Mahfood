@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { authService, type User } from '@/lib/auth';
+import { authService, type User, type AuthResponse } from '@/lib/auth';
 
 interface UseAuthReturn {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  register: (userData: any) => Promise<AuthResponse>;
   logout: () => void;
   hasRole: (role: string) => boolean;
 }
@@ -40,6 +40,7 @@ export function useAuth(): UseAuthReturn {
   const register = async (userData: any) => {
     const response = await authService.register(userData);
     setUser(response.user);
+    return response;
   };
 
   const logout = () => {

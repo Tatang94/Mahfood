@@ -38,7 +38,9 @@ export default function DriverLogin() {
         title: "Login Driver Berhasil",
         description: "Selamat datang di dashboard driver!",
       });
-      window.location.href = "/driver";
+      setTimeout(() => {
+        window.location.href = "/driver";
+      }, 1000);
     } catch (error: any) {
       toast({
         title: "Login Gagal",

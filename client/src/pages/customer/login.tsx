@@ -38,7 +38,9 @@ export default function CustomerLogin() {
         title: "Login Berhasil",
         description: "Selamat datang di dashboard pelanggan!",
       });
-      window.location.href = "/customer";
+      setTimeout(() => {
+        window.location.href = "/customer";
+      }, 1000);
     } catch (error: any) {
       toast({
         title: "Login Gagal",

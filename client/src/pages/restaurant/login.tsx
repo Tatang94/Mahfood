@@ -18,7 +18,7 @@ export default function RestaurantLogin() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const { toast } = useToast();
-  const { login, register } = useAuth();
+  const { user, login, register } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +42,9 @@ export default function RestaurantLogin() {
         title: "Login Restoran Berhasil",
         description: "Selamat datang di dashboard restoran!",
       });
-      window.location.href = "/restaurant";
+      setTimeout(() => {
+        window.location.href = "/restaurant/dashboard";
+      }, 1000);
     } catch (error: any) {
       toast({
         title: "Login Gagal",
@@ -240,7 +242,7 @@ export default function RestaurantLogin() {
                       setLogoFile(file);
                       setLogoPreview(preview);
                     }}
-                    currentPhoto={logoPreview}
+                    currentPhoto={logoPreview ?? undefined}
                     placeholder="Upload logo restoran"
                     maxSize={3}
                   />
