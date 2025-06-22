@@ -487,7 +487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const driverMatchingService = DriverMatchingService.getInstance();
   
   notificationService.setWebSocketServer(wss);
-  await driverMatchingService.initializeDemoDrivers();
+  // Real driver locations only - no demo initialization
   
   wss.on('connection', (ws: any) => {
     

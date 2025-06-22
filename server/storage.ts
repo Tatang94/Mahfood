@@ -486,6 +486,6 @@ async function initializeDatabase() {
   }
 }
 
-initializeDatabase();
+// Database is ready for real data
 
 export const storage = new DatabaseStorage();

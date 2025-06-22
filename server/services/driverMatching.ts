@@ -140,32 +140,7 @@ export class DriverMatchingService {
     }
   }
 
-  // Initialize with some demo driver locations
-  async initializeDemoDrivers(): Promise<void> {
-    try {
-      const drivers = await storage.getDrivers();
-      
-      // Set demo locations for online drivers
-      const demoLocations = [
-        { lat: -6.2088, lng: 106.8456 }, // Sudirman area
-        { lat: -6.2297, lng: 106.8075 }, // Senayan area
-        { lat: -6.2615, lng: 106.8106 }, // Kemang area
-        { lat: -6.1751, lng: 106.8650 }, // Menteng area
-        { lat: -6.2382, lng: 106.8226 }, // Blok M area
-      ];
-
-      drivers.forEach((driver, index) => {
-        if (driver.isOnline && index < demoLocations.length) {
-          const location = demoLocations[index];
-          this.updateDriverLocation(driver.id, location.lat, location.lng);
-        }
-      });
-
-      
-    } catch (error) {
-      
-    }
-  }
+  // Real driver locations only - no demo data
 
   // Get all online drivers with their locations
   getOnlineDrivers(): DriverLocation[] {
