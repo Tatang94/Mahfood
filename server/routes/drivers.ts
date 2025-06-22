@@ -151,14 +151,14 @@ export function registerDriverRoutes(app: Express) {
       }
 
       const currentEarnings = driver[0].totalEarnings;
-      if (amount > currentEarnings) {
+      if (currentEarnings !== null && amount > currentEarnings) {
         return res.status(400).json({ message: "Insufficient balance" });
       }
 
       // Update driver earnings
       await db
         .update(drivers)
-        .set({ totalEarnings: currentEarnings - amount })
+        .set({ totalEarnings: (currentEarnings ?? 0) - amount })
         .where(eq(drivers.id, driver[0].id));
 
       // Create earnings record
@@ -436,7 +436,7 @@ export function registerDriverRoutes(app: Express) {
       const driverData = driver[0];
 
       // Check if driver has enough balance
-      if (driverData.totalEarnings < amount) {
+      if ((driverData.totalEarnings ?? 0) < amount) {
         return res.status(400).json({ message: "Saldo tidak mencukupi untuk penarikan" });
       }
 
@@ -463,7 +463,7 @@ export function registerDriverRoutes(app: Express) {
       await db
         .update(drivers)
         .set({ 
-          totalEarnings: driverData.totalEarnings - amount
+          totalEarnings: (driverData.totalEarnings ?? 0) - amount
         })
         .where(eq(drivers.id, driverData.id));
 
