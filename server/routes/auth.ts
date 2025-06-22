@@ -6,9 +6,28 @@ import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "a8f5f167f44f4964e6c998dee827110c";
 
-// Configure multer for file uploads
+// Input validation and sanitization helpers
+const sanitizeInput = (input: string): string => {
+  return input.trim().replace(/[<>\"'%;()&+]/g, '');
+};
+
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
+};
+
+const validatePassword = (password: string): boolean => {
+  return password.length >= 6 && password.length <= 128;
+};
+
+const validatePhone = (phone: string): boolean => {
+  const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
+  return phoneRegex.test(phone.replace(/\s/g, ''));
+};
+
+// Configure multer for file uploads with security
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -16,17 +35,20 @@ const upload = multer({
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+      const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '');
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(sanitizedName));
     }
   }),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1 // Only allow 1 file per request
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Hanya file gambar (JPEG, PNG, WebP) yang diizinkan'));
     }
   }
 });
@@ -38,12 +60,30 @@ export function registerAuthRoutes(app: Express) {
     { name: 'photo', maxCount: 1 }
   ]), async (req, res) => {
     try {
-      
       const { role, ...userData } = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
-      if (!userData.email || !userData.password || !userData.name) {
-        return res.status(400).json({ message: "Email, password, dan nama harus diisi" });
+      // Validate required fields
+      if (!userData.email || !userData.password || !userData.name || !userData.phone) {
+        return res.status(400).json({ message: "Email, password, nama, dan nomor telepon harus diisi" });
+      }
+
+      // Sanitize inputs
+      userData.email = sanitizeInput(userData.email.toLowerCase());
+      userData.name = sanitizeInput(userData.name);
+      userData.phone = sanitizeInput(userData.phone);
+
+      // Validate inputs
+      if (!validateEmail(userData.email)) {
+        return res.status(400).json({ message: "Format email tidak valid" });
+      }
+      
+      if (!validatePassword(userData.password)) {
+        return res.status(400).json({ message: "Password harus minimal 6 karakter dan maksimal 128 karakter" });
+      }
+      
+      if (!validatePhone(userData.phone)) {
+        return res.status(400).json({ message: "Format nomor telepon tidak valid" });
       }
       
       // Check if user already exists
@@ -118,11 +158,20 @@ export function registerAuthRoutes(app: Express) {
   // Login
   app.post('/api/auth/login', async (req, res) => {
     try {
-      
-      const { email, password } = req.body;
+      let { email, password } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ message: "Email dan password harus diisi" });
+      }
+
+      // Sanitize and validate email
+      email = sanitizeInput(email.toLowerCase());
+      if (!validateEmail(email)) {
+        return res.status(400).json({ message: "Format email tidak valid" });
+      }
+
+      if (!validatePassword(password)) {
+        return res.status(400).json({ message: "Password tidak valid" });
       }
       
       // Find user

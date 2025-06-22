@@ -1,10 +1,50 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import helmet from "helmet";
+import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Configure trust proxy for Replit environment
+app.set('trust proxy', 1);
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for development, enable in production
+  crossOriginEmbedderPolicy: false
+}));
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-domain.com'] // Update with your actual domain
+    : true, // Allow all origins in development
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Terlalu banyak permintaan dari IP ini, coba lagi nanti.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: "Terlalu banyak percobaan login, coba lagi nanti.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/', authLimiter);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
