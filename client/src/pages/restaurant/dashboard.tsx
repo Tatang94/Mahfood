@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import AddMenuModal from "@/components/add-menu-modal";
+import LoginModal from "@/components/login-modal";
 import { 
   Home,
   ShoppingBag,
@@ -22,21 +24,64 @@ import {
   Settings,
   Plus,
   Edit,
-  Eye
+  Eye,
+  LogOut
 } from "lucide-react";
 
 export default function RestaurantDashboard() {
   const [activeTab, setActiveTab] = useState("beranda");
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, logout, isLoading: authLoading } = useAuth();
 
-  // Get current user and restaurant profile
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-    refetchOnWindowFocus: false,
-  });
+  // Show login modal if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setShowLoginModal(true);
+    }
+  }, [user, authLoading]);
+
+  // Close login modal when user logs in
+  useEffect(() => {
+    if (user && user.role === 'restaurant') {
+      setShowLoginModal(false);
+    }
+  }, [user]);
+
+  // Redirect if user is not restaurant
+  useEffect(() => {
+    if (user && user.role !== 'restaurant') {
+      window.location.href = `/${user.role}`;
+    }
+  }, [user]);
+
+  // Show loading state while authentication is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat dashboard restoran...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login modal if not authenticated (without showing dashboard content)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          defaultRole="restaurant"
+        />
+      </div>
+    );
+  }
 
   const { data: restaurant } = useQuery({
     queryKey: ["/api/restaurants/profile", user?.id],
@@ -477,23 +522,39 @@ export default function RestaurantDashboard() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700">Nama Restoran</label>
-                    <p className="text-gray-900">Restoran Rasa Nusantara</p>
+                    <p className="text-gray-900">{restaurant?.name || 'Nama restoran belum diatur'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Alamat</label>
-                    <p className="text-gray-900">Jl. Merdeka No. 123, Tasikmalaya</p>
+                    <p className="text-gray-900">{restaurant?.address || 'Alamat belum diatur'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Jam Operasional</label>
-                    <p className="text-gray-900">09:00 - 22:00</p>
+                    <label className="text-sm font-medium text-gray-700">Telepon</label>
+                    <p className="text-gray-900">{restaurant?.phone || user?.phone || 'Nomor telepon belum diatur'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Status</label>
-                    <Badge className="bg-green-100 text-green-800 border-green-200">Buka</Badge>
+                    <Badge className={`${restaurant?.isActive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}`}>
+                      {restaurant?.isActive ? 'Aktif' : 'Tidak Aktif'}
+                    </Badge>
                   </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    Edit Profil
-                  </Button>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Email</label>
+                    <p className="text-gray-900">{user?.email || 'Email belum diatur'}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Profil
+                    </Button>
+                    <Button 
+                      onClick={logout}
+                      variant="outline" 
+                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      Logout
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -509,6 +570,13 @@ export default function RestaurantDashboard() {
           restaurantId={restaurantId}
         />
       )}
+
+      {/* Login Modal - sama seperti dashboard customer */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        defaultRole="restaurant"
+      />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
