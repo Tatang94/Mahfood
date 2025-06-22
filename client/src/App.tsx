@@ -107,26 +107,6 @@ function Router() {
         }
         return <RestaurantDashboard />;
       }} />
-      <Route path="/driver/signin" component={DriverRegister} />
-      <Route path="/driver/register" component={DriverRegister} />
-      <Route path="/driver/dashboard" component={DriverDashboard} />
-      <Route path="/driver" component={DriverDashboard} />
-      
-      {/* Restaurant Routes */}
-      <Route path="/restaurant/login" component={RestaurantSignIn} />
-      <Route path="/restaurant/signin" component={RestaurantRegister} />
-      <Route path="/restaurant/register" component={RestaurantRegister} />
-      <Route path="/restaurant" component={() => {
-        if (!isAuthenticated) {
-          window.location.href = '/restaurant/login';
-          return null;
-        }
-        if (user?.role !== 'restaurant') {
-          window.location.href = '/';
-          return null;
-        }
-        return <RestaurantDashboard />;
-      }} />
       <Route component={NotFound} />
     </Switch>
   );
