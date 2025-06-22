@@ -1,19 +1,22 @@
 import express from 'express';
 import cors from 'cors';
-import { registerRoutes } from '../server/routes.js';
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+app.get('/api/test', (req, res) => {
+  res.status(200).json({ message: 'API is working' });
+});
+
+// HANYA inisialisasi satu kali saat serverless function dipanggil
 let isInitialized = false;
 
 export default async function handler(req: any, res: any) {
   if (!isInitialized) {
-    await registerRoutes(app);
     isInitialized = true;
   }
+
+  // Gunakan handler Express
   return app(req, res);
 }
