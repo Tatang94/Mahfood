@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import PhotoUpload from "@/components/photo-upload";
 import { 
   Car, 
   MapPin, 
@@ -50,7 +51,9 @@ export default function DriverDashboard() {
     name: user?.name || '',
     phone: '',
     vehicleType: '',
-    vehicleNumber: ''
+    vehicleNumber: '',
+    photoFile: null as File | null,
+    photoPreview: null as string | null
   });
   const [notifications, setNotifications] = useState({
     orderUpdates: true,
@@ -972,6 +975,19 @@ export default function DriverDashboard() {
                         onChange={(e) => setProfileData({...profileData, vehicleNumber: e.target.value})}
                         className="bg-white border-orange-200 text-gray-700"
                         placeholder="B 1234 CD"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm text-gray-600">Foto Profil</Label>
+                      <PhotoUpload
+                        onPhotoChange={(file, preview) => 
+                          setProfileData({...profileData, photoFile: file, photoPreview: preview})
+                        }
+                        currentPhoto={profileData.photoPreview}
+                        placeholder="Upload foto profil"
+                        maxSize={2}
+                        className="mt-2"
                       />
                     </div>
                   </div>

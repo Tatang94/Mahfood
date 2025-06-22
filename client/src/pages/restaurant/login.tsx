@@ -234,17 +234,16 @@ export default function RestaurantLogin() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="image-url">URL Foto Restoran</Label>
-                  <div className="relative">
-                    <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="image-url"
-                      name="imageUrl"
-                      type="url"
-                      placeholder="https://example.com/foto-restoran.jpg"
-                      className="pl-10"
-                    />
-                  </div>
+                  <Label>Logo Restoran</Label>
+                  <PhotoUpload
+                    onPhotoChange={(file, preview) => {
+                      setLogoFile(file);
+                      setLogoPreview(preview);
+                    }}
+                    currentPhoto={logoPreview}
+                    placeholder="Upload logo restoran"
+                    maxSize={3}
+                  />
                 </div>
 
                 <div className="space-y-2">

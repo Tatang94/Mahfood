@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import AddMenuModal from "@/components/add-menu-modal";
 import { 
   Home,
   ShoppingBag,
@@ -27,6 +28,7 @@ import {
 export default function RestaurantDashboard() {
   const [activeTab, setActiveTab] = useState("beranda");
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -391,7 +393,11 @@ export default function RestaurantDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Menu Makanan</h2>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+              <Button 
+                size="sm" 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => setShowAddMenuModal(true)}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Tambah Menu
               </Button>
@@ -494,6 +500,15 @@ export default function RestaurantDashboard() {
           </div>
         )}
       </div>
+
+      {/* Add Menu Modal */}
+      {restaurantId && (
+        <AddMenuModal
+          isOpen={showAddMenuModal}
+          onClose={() => setShowAddMenuModal(false)}
+          restaurantId={restaurantId}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
