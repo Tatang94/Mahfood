@@ -46,7 +46,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li><a href="#" className="text-gray-300 hover:text-primary transition-colors">Pesan Makanan</a></li>
               <li><a href="#" className="text-gray-300 hover:text-primary transition-colors">Lacak Pesanan</a></li>
-              <li><a href="/help" className="text-gray-300 hover:text-primary transition-colors">Bantuan</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-primary transition-colors">Bantuan</a></li>
               <li><a href="#" className="text-gray-300 hover:text-primary transition-colors">Feedback</a></li>
             </ul>
           </div>

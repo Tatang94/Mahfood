@@ -84,8 +84,6 @@ export class PayDisiniService {
     };
 
     try {
-      console.log('PayDisini Request:', requestData);
-      
       const response = await fetch(this.config.baseUrl, {
         method: 'POST',
         headers: {
@@ -99,11 +97,8 @@ export class PayDisiniService {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json() as TransactionResponse;
-      console.log('PayDisini Response:', result);
-      return result;
-    } catch (error) {
-      console.error('PayDisini API Error:', error);
+      return await response.json() as TransactionResponse;
+    } catch (error: any) {
       throw new Error(`PayDisini API Error: ${error.message}`);
     }
   }
@@ -129,7 +124,7 @@ export class PayDisiniService {
       });
 
       return await response.json();
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`PayDisini Status Check Error: ${error.message}`);
     }
   }

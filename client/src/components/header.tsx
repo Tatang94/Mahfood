@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import LoginModal from "@/components/login-modal";
-import SearchSuggestions from "@/components/search-suggestions";
+
 import RoleMenu from "@/components/role-menu";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -20,32 +20,14 @@ export default function Header({ onCartToggle }: HeaderProps) {
   const { user, isAuthenticated, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       window.location.href = `/menu?search=${encodeURIComponent(searchQuery)}`;
-      setShowSearchSuggestions(false);
     }
   };
 
-  const handleSearchSelect = (query: string) => {
-    setSearchQuery(query);
-    window.location.href = `/menu?search=${encodeURIComponent(query)}`;
-  };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSearchSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -76,37 +58,22 @@ export default function Header({ onCartToggle }: HeaderProps) {
               }`}>
                 Menu
               </Link>
-              <Link href="/about" className={`transition-colors hover:text-primary ${
-                location === "/about" ? "text-primary font-medium" : "text-gray-700"
-              }`}>
-                Tentang
-              </Link>
-              <Link href="/profile" className={`transition-colors hover:text-primary ${
-                location === "/profile" ? "text-primary font-medium" : "text-gray-700"
-              }`}>
-                Profil
-              </Link>
+
             </nav>
           )}
 
           {/* Search Bar - Only show for customer/guest */}
           {(!isAuthenticated || !user || user.role === 'customer') && (
-            <div className="hidden lg:block flex-1 max-w-lg mx-8" ref={searchRef}>
+            <div className="hidden lg:block flex-1 max-w-lg mx-8">
               <form onSubmit={handleSearch} className="relative">
                 <Input
                   type="text"
                   placeholder="Cari makanan..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setShowSearchSuggestions(true)}
                   className="pl-10 pr-4"
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <SearchSuggestions
-                  isVisible={showSearchSuggestions}
-                  onSearch={handleSearchSelect}
-                  onClose={() => setShowSearchSuggestions(false)}
-                />
               </form>
             </div>
           )}
@@ -175,22 +142,18 @@ export default function Header({ onCartToggle }: HeaderProps) {
 
         {/* Mobile Search - Only show for customer/guest */}
         {(!isAuthenticated || !user || user.role === 'customer') && (
-          <div className="lg:hidden pb-4" ref={searchRef}>
+          <div className="lg:hidden pb-4">
             <form onSubmit={handleSearch} className="relative">
               <Input
                 type="text"
                 placeholder="Cari makanan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSearchSuggestions(true)}
+
                 className="pl-10 pr-4"
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <SearchSuggestions
-                isVisible={showSearchSuggestions}
-                onSearch={handleSearchSelect}
-                onClose={() => setShowSearchSuggestions(false)}
-              />
+
             </form>
           </div>
         )}

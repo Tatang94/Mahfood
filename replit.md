@@ -86,6 +86,13 @@ The application is configured for multiple deployment targets:
 
 ## Recent Changes
 
+- Januari 22, 2025: Berhasil migrasi proyek dari Replit Agent ke Replit environment
+  - Membersihkan 15+ file duplikat dan komponen yang tidak terpakai
+  - Mengoptimalkan kode dengan menghapus import dan variabel yang tidak digunakan
+  - Memperbaiki file wallet.ts dengan Drizzle ORM yang konsisten
+  - Menghapus semua error TypeScript dan LSP untuk performa yang lebih baik
+  - Aplikasi kini berjalan dengan lebih ringan dan efisien
+
 - Januari 22, 2025: Implementasi Dashboard Mitra Restoran dengan fitur lengkap seperti GoBiz
   - Created comprehensive restaurant partner dashboard dengan 5 tab utama:
     - Beranda: Overview statistik, pesanan hari ini, pendapatan, rating

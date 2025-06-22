@@ -6,10 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Menu from "@/pages/menu";
-import FoodDetail from "@/pages/food-detail";
-import Profile from "@/pages/profile";
-import About from "@/pages/about";
-import Help from "@/pages/help";
+
 import Checkout from "@/pages/checkout";
 import AdminDashboard from "@/pages/admin/dashboard";
 import DriverDashboard from "@/pages/driver/dashboard";
@@ -17,13 +14,9 @@ import RestaurantDashboard from "@/pages/restaurant/dashboard";
 import DriverLogin from "@/pages/driver/login";
 import RestaurantLogin from "@/pages/restaurant/login";
 import CustomerLogin from "@/pages/customer/login";
-import CustomerSignIn from "@/pages/customer/signin";
-import DriverSignIn from "@/pages/driver/signin";
 import DriverRegister from "@/pages/driver/register";
-import RestaurantSignIn from "@/pages/restaurant/signin";
 import RestaurantRegister from "@/pages/restaurant/register";
 import CustomerDashboard from "@/pages/customer/dashboard";
-import RoleSelector from "@/components/role-selector";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import CartSidebar from "@/components/cart-sidebar";
@@ -51,19 +44,13 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/menu" component={Menu} />
       <Route path="/menu/:category" component={Menu} />
-      <Route path="/food/:id" component={FoodDetail} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/about" component={About} />
-      <Route path="/help" component={Help} />
       <Route path="/checkout" component={Checkout} />
-      <Route path="/select-role" component={RoleSelector} />
       
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboard} />
       
       {/* Customer Routes */}
       <Route path="/customer/login" component={CustomerLogin} />
-      <Route path="/customer/signin" component={CustomerSignIn} />
       <Route path="/customer" component={() => {
         if (!isAuthenticated) {
           window.location.href = '/customer/login';
@@ -77,8 +64,7 @@ function Router() {
       }} />
       
       {/* Driver Routes */}
-      <Route path="/driver/login" component={DriverSignIn} />
-      <Route path="/driver/signin" component={DriverSignIn} />
+      <Route path="/driver/login" component={DriverLogin} />
       <Route path="/driver/register" component={DriverRegister} />
       <Route path="/driver" component={() => {
         if (!isAuthenticated) {
@@ -94,7 +80,7 @@ function Router() {
       
       {/* Restaurant Routes */}
       <Route path="/restaurant/login" component={RestaurantLogin} />
-      <Route path="/restaurant/signin" component={RestaurantSignIn} />
+
       <Route path="/restaurant/register" component={RestaurantRegister} />
       <Route path="/restaurant/dashboard" component={() => {
         if (!isAuthenticated) {

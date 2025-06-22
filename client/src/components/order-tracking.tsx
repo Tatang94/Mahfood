@@ -5,7 +5,7 @@ import { CheckCircle, Clock, Truck, ChefHat, MapPin, Phone } from "lucide-react"
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import MapInteractive from "@/components/map-interactive";
+import Map from "@/components/map";
 
 interface OrderTrackingProps {
   isOpen: boolean;
@@ -107,18 +107,16 @@ export default function OrderTracking({ isOpen, onClose, orderId }: OrderTrackin
                 Lokasi Driver Real-time
               </h4>
               <div className="h-64 rounded-lg overflow-hidden border">
-                <MapInteractive
+                <Map
                   center={driverLocation}
                   zoom={15}
                   height="100%"
                   markers={[
                     {
                       position: driverLocation,
-                      popup: "Driver sedang menuju lokasi Anda",
-                      icon: "🚗"
+                      popup: "Driver sedang menuju lokasi Anda"
                     }
                   ]}
-                  disableInteraction={true}
                 />
               </div>
               {order?.driver && (
