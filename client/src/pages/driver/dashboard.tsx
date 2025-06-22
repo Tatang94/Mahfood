@@ -349,12 +349,8 @@ export default function DriverDashboard() {
       toast({ title: "Nomor telepon tidak boleh kosong", variant: "destructive" });
       return;
     }
-    if (!profileData.vehicleType) {
-      toast({ title: "Jenis kendaraan harus dipilih", variant: "destructive" });
-      return;
-    }
     if (!profileData.vehicleNumber.trim()) {
-      toast({ title: "Identitas kendaraan tidak boleh kosong", variant: "destructive" });
+      toast({ title: "Merek/model sepeda tidak boleh kosong", variant: "destructive" });
       return;
     }
     
@@ -900,14 +896,10 @@ export default function DriverDashboard() {
                   
                   {/* Vehicle Info */}
                   <div className="bg-orange-50 rounded-lg p-3 mb-4 border border-orange-100">
-                    <h5 className="font-medium text-sm mb-2 text-gray-700">Informasi Kendaraan</h5>
+                    <h5 className="font-medium text-sm mb-2 text-gray-700">Informasi Sepeda</h5>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">Jenis</span>
-                        <span className="text-gray-700">{driverData?.vehicleType || profileData.vehicleType || 'Belum diatur'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Identitas Kendaraan</span>
+                        <span className="text-gray-500">Merek/Model</span>
                         <span className="text-gray-700">{driverData?.vehicleNumber || profileData.vehicleNumber || 'Belum diatur'}</span>
                       </div>
                     </div>

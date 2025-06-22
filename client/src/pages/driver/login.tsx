@@ -189,34 +189,25 @@ export default function DriverLogin() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vehicle">Jenis Kendaraan</Label>
-                  <select name="vehicleType" className="w-full p-2 border border-gray-300 rounded-md" required>
-                    <option value="">Pilih kendaraan</option>
-                    <option value="bicycle">Sepeda</option>
-                    <option value="motorcycle">Motor</option>
-                    <option value="car">Mobil</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleNumber">Identitas Kendaraan</Label>
+                  <Label htmlFor="vehicleNumber">Merek/Model Sepeda</Label>
                   <div className="relative">
                     <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       id="vehicleNumber"
                       name="vehicleNumber"
                       type="text"
-                      placeholder="Merek/Model Sepeda atau Nomor Plat"
+                      placeholder="Contoh: Polygon, United, Wimcycle, dll"
                       className="pl-10"
                       required
                     />
                   </div>
                   <p className="text-xs text-gray-500">
-                    Untuk sepeda: tulis merek/model (contoh: Polygon, United, dll)
-                    <br />
-                    Untuk motor/mobil: nomor plat kendaraan
+                    Tuliskan merek dan model sepeda yang Anda gunakan untuk pengantaran
                   </p>
                 </div>
+
+                {/* Hidden field for vehicle type - always bicycle */}
+                <input type="hidden" name="vehicleType" value="bicycle" />
 
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>

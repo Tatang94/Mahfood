@@ -184,7 +184,8 @@ export function registerRestaurantRoutes(app: Express) {
         price: parseFloat(price),
         categoryId: parseInt(categoryId),
         restaurantId,
-        imageUrl
+        imageUrl,
+        ingredients: [] // Default empty array for ingredients
       };
       
       const newItem = await storage.createFoodItem(menuItem);

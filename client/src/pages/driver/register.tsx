@@ -17,7 +17,7 @@ export default function DriverRegister() {
     phone: "",
     password: "",
     confirmPassword: "",
-    vehicleType: "motorcycle",
+    vehicleType: "bicycle",
     vehicleNumber: ""
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -160,31 +160,15 @@ export default function DriverRegister() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="vehicleType" className="text-sm font-medium text-gray-700">
-                  Jenis Kendaraan
-                </Label>
-                <Select onValueChange={(value) => setFormData(prev => ({ ...prev, vehicleType: value }))}>
-                  <SelectTrigger className="h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
-                    <SelectValue placeholder="Pilih jenis kendaraan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="bicycle">Sepeda</SelectItem>
-                    <SelectItem value="motorcycle">Motor</SelectItem>
-                    <SelectItem value="car">Mobil</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="vehicleNumber" className="text-sm font-medium text-gray-700">
-                  Identitas Kendaraan
+                  Merek/Model Sepeda
                 </Label>
                 <div className="relative">
                   <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <Input
                     id="vehicleNumber"
                     type="text"
-                    placeholder="Merek/Model Sepeda atau Nomor Plat"
+                    placeholder="Contoh: Polygon, United, Wimcycle, dll"
                     value={formData.vehicleNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, vehicleNumber: e.target.value }))}
                     className="pl-10 h-12 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
@@ -192,9 +176,7 @@ export default function DriverRegister() {
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Untuk sepeda: tulis merek/model (contoh: Polygon, United, dll)
-                  <br />
-                  Untuk motor/mobil: nomor plat kendaraan
+                  Tuliskan merek dan model sepeda yang Anda gunakan untuk pengantaran
                 </p>
               </div>
 
