@@ -5,6 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import AddMenuModal from "@/components/add-menu-modal";
 import LoginModal from "@/components/login-modal";
@@ -25,7 +28,22 @@ import {
   Plus,
   Edit,
   Eye,
-  LogOut
+  LogOut,
+  BarChart3,
+  FileText,
+  Star,
+  TrendingUp,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  Camera,
+  Save,
+  X,
+  Search,
+  Filter,
+  MoreVertical,
+  Trash2
 } from "lucide-react";
 
 interface TabButtonProps {
@@ -59,8 +77,12 @@ function TabButton({ id, icon: Icon, label, isActive, onClick, badge }: TabButto
 }
 
 export default function RestaurantDashboard() {
-  const [activeTab, setActiveTab] = useState("pesanan");
+  const [activeTab, setActiveTab] = useState("beranda");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
+  const [editingRestaurant, setEditingRestaurant] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMenuCategory, setSelectedMenuCategory] = useState("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, logout, isLoading: authLoading } = useAuth();
@@ -120,6 +142,20 @@ export default function RestaurantDashboard() {
   const { data: orders = [] } = useQuery({
     queryKey: ["/api/orders/restaurant", restaurant?.id],
     queryFn: () => apiRequest(`/api/orders/restaurant?restaurantId=${restaurant?.id}`),
+    enabled: !!restaurant?.id,
+  });
+
+  // Get restaurant menu items
+  const { data: menuItems = [] } = useQuery({
+    queryKey: ["/api/food-items/restaurant", restaurant?.id],
+    queryFn: () => apiRequest(`/api/food-items/restaurant/${restaurant?.id}`),
+    enabled: !!restaurant?.id,
+  });
+
+  // Get restaurant stats
+  const { data: stats } = useQuery({
+    queryKey: ["/api/restaurants/stats", restaurant?.id],
+    queryFn: () => apiRequest(`/api/restaurants/${restaurant?.id}/stats`),
     enabled: !!restaurant?.id,
   });
 
@@ -199,15 +235,667 @@ export default function RestaurantDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (restaurant) {
-      setRestaurantId(restaurant.id);
+  // Update order status mutation
+  const updateOrderMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
+      apiRequest(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/restaurant"] });
+      toast({ title: "Status pesanan berhasil diperbarui" });
+    },
+    onError: () => {
+      toast({ title: "Gagal memperbarui status pesanan", variant: "destructive" });
+    },
+  });
+
+  // Toggle menu item availability
+  const toggleMenuItemMutation = useMutation({
+    mutationFn: ({ itemId, isAvailable }: { itemId: number; isAvailable: boolean }) =>
+      apiRequest(`/api/food-items/${itemId}/toggle`, {
+        method: "PATCH",
+        body: JSON.stringify({ isAvailable }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/food-items/restaurant"] });
+      toast({ title: "Status menu berhasil diperbarui" });
+    },
+  });
+
+  // Calculate statistics
+  const todayOrders = orders.filter((order: any) => {
+    const orderDate = new Date(order.createdAt);
+    const today = new Date();
+    return orderDate.toDateString() === today.toDateString();
+  });
+
+  const pendingOrders = orders.filter((order: any) => order.status === 'pending');
+  const activeOrders = orders.filter((order: any) => 
+    ['confirmed', 'preparing', 'ready', 'delivering'].includes(order.status)
+  );
+  const completedToday = todayOrders.filter((order: any) => order.status === 'delivered');
+  const todayRevenue = completedToday.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
+
+  // Helper functions
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'preparing': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'ready': return 'bg-green-100 text-green-800 border-green-200';
+      case 'delivering': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }, [restaurant]);
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Menunggu Konfirmasi';
+      case 'confirmed': return 'Dikonfirmasi';
+      case 'preparing': return 'Sedang Dimasak';
+      case 'ready': return 'Siap Diambil';
+      case 'delivering': return 'Sedang Dikirim';
+      case 'delivered': return 'Sudah Dikirim';
+      case 'cancelled': return 'Dibatalkan';
+      default: return status;
+    }
+  };
+
+  const getNextStatus = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'pending': return { status: 'confirmed', label: 'Konfirmasi' };
+      case 'confirmed': return { status: 'preparing', label: 'Mulai Masak' };
+      case 'preparing': return { status: 'ready', label: 'Siap Ambil' };
+      case 'ready': return { status: 'delivering', label: 'Kirim' };
+      default: return null;
+    }
+  };
+
+  // Filter menu items
+  const filteredMenuItems = menuItems.filter((item: any) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedMenuCategory === 'all' || item.categoryId.toString() === selectedMenuCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Render different tab content
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'beranda':
+        return (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <ShoppingBag className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pesanan Hari Ini</p>
+                      <p className="text-xl font-bold text-gray-900">{todayOrders.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
+                      <p className="text-lg font-bold text-gray-900">{formatCurrency(todayRevenue)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <Clock className="w-4 h-4 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Pesanan Aktif</p>
+                      <p className="text-xl font-bold text-gray-900">{activeOrders.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Star className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Rating</p>
+                      <p className="text-xl font-bold text-gray-900">{restaurant?.rating || 5.0}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Orders */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Pesanan Terbaru</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setActiveTab('pesanan')}
+                  >
+                    Lihat Semua
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {orders.slice(0, 5).length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>Belum ada pesanan hari ini</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.slice(0, 5).map((order: any) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <p className="font-medium">Pesanan #{order.id}</p>
+                            <Badge className={`text-xs border ${getStatusColor(order.status)}`}>
+                              {getStatusLabel(order.status)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">{formatCurrency(order.totalAmount)}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(order.createdAt).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                        {getNextStatus(order.status) && (
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderMutation.mutate({
+                              orderId: order.id,
+                              status: getNextStatus(order.status)!.status
+                            })}
+                            disabled={updateOrderMutation.isPending}
+                          >
+                            {getNextStatus(order.status)!.label}
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'pesanan':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Kelola Pesanan</h2>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary">{pendingOrders.length} Menunggu</Badge>
+                <Badge className="bg-blue-100 text-blue-800">{activeOrders.length} Aktif</Badge>
+              </div>
+            </div>
+
+            {orders.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Belum Ada Pesanan</h3>
+                  <p className="text-gray-600">Pesanan akan muncul di sini ketika pelanggan memesan</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order: any) => (
+                  <Card key={order.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold">Pesanan #{order.id}</h3>
+                            <Badge className={`text-xs border ${getStatusColor(order.status)}`}>
+                              {getStatusLabel(order.status)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {new Date(order.createdAt).toLocaleString('id-ID')}
+                          </p>
+                          <p className="text-lg font-semibold">{formatCurrency(order.totalAmount)}</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          {getNextStatus(order.status) && (
+                            <Button
+                              onClick={() => updateOrderMutation.mutate({
+                                orderId: order.id,
+                                status: getNextStatus(order.status)!.status
+                              })}
+                              disabled={updateOrderMutation.isPending}
+                              size="sm"
+                            >
+                              {getNextStatus(order.status)!.label}
+                            </Button>
+                          )}
+                          {order.status === 'pending' && (
+                            <Button
+                              variant="outline"
+                              onClick={() => updateOrderMutation.mutate({
+                                orderId: order.id,
+                                status: 'cancelled'
+                              })}
+                              disabled={updateOrderMutation.isPending}
+                              size="sm"
+                            >
+                              Tolak
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-medium mb-2">Alamat Pengiriman:</h4>
+                            <p className="text-sm text-gray-600">{order.deliveryAddress}</p>
+                          </div>
+                          {order.customerNotes && (
+                            <div>
+                              <h4 className="font-medium mb-2">Catatan:</h4>
+                              <p className="text-sm text-gray-600">{order.customerNotes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'menu':
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+              <div>
+                <h2 className="text-xl font-semibold">Kelola Menu</h2>
+                <p className="text-sm text-gray-600">{menuItems.length} item menu</p>
+              </div>
+              <Button onClick={() => setShowAddMenuModal(true)} className="w-full sm:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Menu
+              </Button>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Cari menu..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <select
+                value={selectedMenuCategory}
+                onChange={(e) => setSelectedMenuCategory(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+              >
+                <option value="all">Semua Kategori</option>
+                <option value="1">Makanan Utama</option>
+                <option value="2">Minuman</option>
+                <option value="3">Snack</option>
+                <option value="4">Dessert</option>
+              </select>
+            </div>
+
+            {/* Menu Items Grid */}
+            {filteredMenuItems.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <UtensilsCrossed className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Belum Ada Menu</h3>
+                  <p className="text-gray-600 mb-4">Mulai tambahkan menu untuk restoran Anda</p>
+                  <Button onClick={() => setShowAddMenuModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Tambah Menu Pertama
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMenuItems.map((item: any) => (
+                  <Card key={item.id} className="overflow-hidden">
+                    <div className="aspect-video bg-gray-200 relative">
+                      {item.imageUrl ? (
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Camera className="w-8 h-8 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <Switch
+                          checked={item.isAvailable}
+                          onCheckedChange={(checked) => 
+                            toggleMenuItemMutation.mutate({
+                              itemId: item.id,
+                              isAvailable: checked
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-lg">{item.name}</h3>
+                        <Badge variant={item.isAvailable ? "default" : "secondary"}>
+                          {item.isAvailable ? "Tersedia" : "Habis"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-green-600">
+                          {formatCurrency(item.price)}
+                        </span>
+                        <div className="flex items-center space-x-1">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      {item.isPopular && (
+                        <Badge className="mt-2 bg-yellow-100 text-yellow-800">
+                          <Star className="w-3 h-3 mr-1" />
+                          Populer
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'laporan':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold">Laporan & Analitik</h2>
+            
+            {/* Revenue Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                    </div>
+                    <h3 className="font-medium">Pendapatan Hari Ini</h3>
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(stats?.todayRevenue || 0)}</p>
+                  <p className="text-sm text-gray-600">{stats?.todayOrders || 0} pesanan</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h3 className="font-medium">Minggu Ini</h3>
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(stats?.thisWeekRevenue || 0)}</p>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <TrendingUp className="w-4 h-4 text-green-500" />
+                    <span className="text-sm text-green-600">+12%</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <BarChart3 className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <h3 className="font-medium">Bulan Ini</h3>
+                  </div>
+                  <p className="text-2xl font-bold">{formatCurrency(stats?.thisMonthRevenue || 0)}</p>
+                  <p className="text-sm text-gray-600">Target: 75%</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Metrics */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Metrik Performa</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">{restaurant?.rating || 5.0}</p>
+                    <p className="text-sm text-gray-600">Rating Rata-rata</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
+                    <p className="text-sm text-gray-600">Total Pesanan</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">25 min</p>
+                    <p className="text-sm text-gray-600">Waktu Persiapan</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">95%</p>
+                    <p className="text-sm text-gray-600">Tingkat Penerimaan</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'profil':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Profil Restoran</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => setEditingRestaurant(!editingRestaurant)}
+              >
+                {editingRestaurant ? 'Batal' : 'Edit Profil'}
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Restaurant Photo */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Foto Restoran</label>
+                    <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                      {restaurant?.imageUrl ? (
+                        <img 
+                          src={restaurant.imageUrl} 
+                          alt={restaurant.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600">Upload foto restoran</p>
+                        </div>
+                      )}
+                    </div>
+                    {editingRestaurant && (
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Camera className="w-4 h-4 mr-2" />
+                        Ubah Foto
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Restaurant Details */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nama Restoran</label>
+                      {editingRestaurant ? (
+                        <Input defaultValue={restaurant?.name} />
+                      ) : (
+                        <p className="text-gray-900">{restaurant?.name || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Deskripsi</label>
+                      {editingRestaurant ? (
+                        <Textarea defaultValue={restaurant?.description} rows={3} />
+                      ) : (
+                        <p className="text-gray-900">{restaurant?.description || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Alamat</label>
+                      {editingRestaurant ? (
+                        <Textarea defaultValue={restaurant?.address} rows={2} />
+                      ) : (
+                        <p className="text-gray-900 flex items-start">
+                          <MapPin className="w-4 h-4 mt-1 mr-2 text-gray-500" />
+                          {restaurant?.address || '-'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nomor Telepon</label>
+                      {editingRestaurant ? (
+                        <Input defaultValue={restaurant?.phone} />
+                      ) : (
+                        <p className="text-gray-900 flex items-center">
+                          <Phone className="w-4 h-4 mr-2 text-gray-500" />
+                          {restaurant?.phone || '-'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Email</label>
+                      <p className="text-gray-900 flex items-center">
+                        <Mail className="w-4 h-4 mr-2 text-gray-500" />
+                        {user?.email || '-'}
+                      </p>
+                    </div>
+
+                    {editingRestaurant && (
+                      <div className="flex space-x-3 pt-4">
+                        <Button className="flex-1">
+                          <Save className="w-4 h-4 mr-2" />
+                          Simpan Perubahan
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setEditingRestaurant(false)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pengaturan Akun</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Status Restoran</h4>
+                      <p className="text-sm text-gray-600">Aktifkan untuk menerima pesanan</p>
+                    </div>
+                    <Switch checked={restaurant?.isActive} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Notifikasi Pesanan</h4>
+                      <p className="text-sm text-gray-600">Terima notifikasi untuk pesanan baru</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      onClick={logout}
+                      className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Keluar dari Akun
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      default:
+        return <div>Tab tidak ditemukan</div>;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* TasFood Header */}
+      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
@@ -216,7 +904,7 @@ export default function RestaurantDashboard() {
                 <UtensilsCrossed className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Dashboard Restoran</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Dashboard Mitra</h1>
                 <p className="text-sm text-gray-600">{restaurant?.name || 'Restoran Anda'}</p>
               </div>
             </div>
@@ -231,6 +919,65 @@ export default function RestaurantDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-4 pb-20">
+        {renderTabContent()}
+      </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
+        <div className="grid grid-cols-5 gap-1">
+          <TabButton
+            id="beranda"
+            icon={Home}
+            label="Beranda"
+            isActive={activeTab === "beranda"}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="pesanan"
+            icon={ShoppingBag}
+            label="Pesanan"
+            isActive={activeTab === "pesanan"}
+            onClick={setActiveTab}
+            badge={pendingOrders.length}
+          />
+          <TabButton
+            id="menu"
+            icon={UtensilsCrossed}
+            label="Menu"
+            isActive={activeTab === "menu"}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="laporan"
+            icon={BarChart3}
+            label="Laporan"
+            isActive={activeTab === "laporan"}
+            onClick={setActiveTab}
+          />
+          <TabButton
+            id="profil"
+            icon={User}
+            label="Profil"
+            isActive={activeTab === "profil"}
+            onClick={setActiveTab}
+          />
+        </div>
+      </div>
+
+      {/* Add Menu Modal */}
+      {showAddMenuModal && (
+        <AddMenuModal
+          isOpen={showAddMenuModal}
+          onClose={() => setShowAddMenuModal(false)}
+          restaurantId={restaurant?.id}
+        />
+      )}
+    </div>
+  );
+}
 
       {/* Main Content */}
       <div className="p-4 pb-20">

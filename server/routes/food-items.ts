@@ -39,6 +39,62 @@ export function registerFoodItemRoutes(app: Express) {
     }
   });
 
+  // Get food items by restaurant ID
+  app.get('/api/food-items/restaurant/:restaurantId', authenticateToken, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      
+      // Verify restaurant ownership for restaurant role
+      if (userRole === 'restaurant') {
+        const restaurant = await storage.getRestaurantById(restaurantId);
+        if (!restaurant || restaurant.userId !== authenticatedUserId) {
+          return res.status(403).json({ message: "Tidak dapat mengakses menu restoran lain." });
+        }
+      }
+      
+      const foodItems = await storage.getFoodItemsByRestaurant(restaurantId);
+      res.json(foodItems);
+    } catch (error) {
+      console.error('Error fetching restaurant food items:', error);
+      res.status(500).json({ message: "Failed to fetch restaurant food items" });
+    }
+  });
+
+  // Toggle food item availability
+  app.patch('/api/food-items/:id/toggle', authenticateToken, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      const { isAvailable } = req.body;
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      
+      // Only restaurant owners can toggle their menu items
+      if (userRole !== 'restaurant') {
+        return res.status(403).json({ message: "Akses ditolak. Hanya restoran yang dapat mengubah menu." });
+      }
+      
+      // Get food item and verify ownership
+      const foodItem = await storage.getFoodItemById(itemId);
+      if (!foodItem) {
+        return res.status(404).json({ message: "Menu item tidak ditemukan." });
+      }
+      
+      const restaurant = await storage.getRestaurantById(foodItem.restaurantId);
+      if (!restaurant || restaurant.userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Tidak dapat mengubah menu restoran lain." });
+      }
+      
+      // Update availability
+      await storage.updateFoodItem(itemId, { isAvailable });
+      res.json({ message: "Status menu berhasil diperbarui" });
+    } catch (error) {
+      console.error('Error toggling food item availability:', error);
+      res.status(500).json({ message: "Failed to toggle food item availability" });
+    }
+  });
+
   // Add new food item with photo upload
   app.post("/api/food-items", authenticateToken, upload.single('photo'), async (req, res) => {
     try {

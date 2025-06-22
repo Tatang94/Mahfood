@@ -86,6 +86,28 @@ The application is configured for multiple deployment targets:
 
 ## Recent Changes
 
+- Januari 22, 2025: Implementasi Dashboard Mitra Restoran dengan fitur lengkap seperti GoBiz
+  - Created comprehensive restaurant partner dashboard dengan 5 tab utama:
+    - Beranda: Overview statistik, pesanan hari ini, pendapatan, rating
+    - Pesanan: Kelola semua pesanan dengan status tracking real-time
+    - Menu: Manajemen menu lengkap dengan search, filter, toggle availability
+    - Laporan: Analytics dan metrik performa restoran
+    - Profil: Edit profil restoran dan pengaturan akun
+  - Added security features untuk restaurant dashboard:
+    - JWT authentication untuk semua restaurant endpoints
+    - Ownership verification untuk menu dan orders
+    - Role-based access control
+  - Enhanced API endpoints:
+    - GET /api/food-items/restaurant/:id untuk menu by restaurant
+    - PATCH /api/food-items/:id/toggle untuk toggle availability
+    - Authentication pada semua restaurant-specific endpoints
+  - UI/UX improvements:
+    - Mobile-first responsive design dengan bottom navigation
+    - Real-time status updates untuk orders
+    - Search dan filter functionality untuk menu management
+    - Statistics cards dengan visual indicators
+    - Professional GoBiz-style interface
+
 - Januari 22, 2025: Berhasil migrasi dan penguatan keamanan aplikasi FoodieID
   - Configured PostgreSQL database dengan environment variables yang aman
   - Applied database migrations menggunakan Drizzle ORM (13 tabel berhasil dibuat)
