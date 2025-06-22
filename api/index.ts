@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import serverless from 'serverless-http';
 
 const app = express();
 app.use(cors());
@@ -9,14 +10,6 @@ app.get('/api/test', (req, res) => {
   res.status(200).json({ message: 'API is working' });
 });
 
-// HANYA inisialisasi satu kali saat serverless function dipanggil
-let isInitialized = false;
-
-export default async function handler(req: any, res: any) {
-  if (!isInitialized) {
-    isInitialized = true;
-  }
-
-  // Gunakan handler Express
-  return app(req, res);
-}
+// Konversi express ke handler serverless
+const handler = serverless(app);
+export default handler;
