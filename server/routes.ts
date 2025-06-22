@@ -532,15 +532,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (error) {
           }
         } else if (data.type === 'update_driver_location') {
-          // Update driver location
-          if (data.driverId && data.location) {
+          // Update driver location - dengan validasi keamanan
+          if (data.driverId && data.location && ws.driverId === data.driverId) {
             try {
-              const driverMatchingService = DriverMatchingService.getInstance();
-              driverMatchingService.updateDriverLocation(
-                data.driverId, 
-                data.location.lat, 
-                data.location.lng
-              );
+              const { lat, lng } = data.location;
+              
+              // Validasi koordinat Indonesia
+              const INDONESIA_BOUNDS = {
+                north: 6.5, south: -11.5, west: 95.0, east: 141.0
+              };
+              
+              if (lat >= INDONESIA_BOUNDS.south && lat <= INDONESIA_BOUNDS.north && 
+                  lng >= INDONESIA_BOUNDS.west && lng <= INDONESIA_BOUNDS.east) {
+                const driverMatchingService = DriverMatchingService.getInstance();
+                driverMatchingService.updateDriverLocation(data.driverId, lat, lng);
+              }
             } catch (error) {
             }
           }

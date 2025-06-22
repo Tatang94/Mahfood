@@ -95,6 +95,13 @@ The application is configured for multiple deployment targets:
   - Konfigurasi rate limiting: 100 req/15min umum, 5 req/15min untuk auth endpoints
   - Upload file security dengan filter tipe file dan sanitisasi nama file
   - Trust proxy configuration untuk lingkungan Replit
+  - **KEAMANAN FITUR MAPS**: Implementasi keamanan lokasi driver dan customer
+    - Autentikasi wajib untuk akses/update lokasi driver
+    - Validasi koordinat Indonesia (mencegah koordinat palsu)
+    - Rate limiting khusus untuk update lokasi (20/menit)
+    - Driver hanya bisa update lokasi sendiri
+    - Customer hanya bisa lihat lokasi driver yang melayani order mereka
+    - Validasi WebSocket untuk real-time location updates
   - Aplikasi berjalan dengan aman di port 5000 dengan semua fitur keamanan aktif
 
 - January 15, 2025: Implemented comprehensive driver dashboard features

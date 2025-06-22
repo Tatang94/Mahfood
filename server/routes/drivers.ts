@@ -4,6 +4,33 @@ import { db } from "../db";
 import { drivers, users, driverEarnings, orders, userWallets, walletTransactions, driverWithdrawals } from "@shared/schema";
 import { eq, and, desc, gte, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { authenticateToken } from "./auth";
+import rateLimit from "express-rate-limit";
+
+// Rate limiting untuk location updates
+const locationLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 menit
+  max: 20, // maksimal 20 update lokasi per menit
+  message: "Terlalu banyak update lokasi, coba lagi nanti.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Validasi koordinat Indonesia
+const validateIndonesianCoordinates = (lat: number, lng: number): boolean => {
+  // Indonesia coordinates range
+  const INDONESIA_BOUNDS = {
+    north: 6.5,    // Aceh
+    south: -11.5,  // Nusa Tenggara
+    west: 95.0,    // Sumatera
+    east: 141.0    // Papua
+  };
+  
+  return lat >= INDONESIA_BOUNDS.south && 
+         lat <= INDONESIA_BOUNDS.north && 
+         lng >= INDONESIA_BOUNDS.west && 
+         lng <= INDONESIA_BOUNDS.east;
+};
 
 export function registerDriverRoutes(app: Express) {
   // Get driver profile by user ID
@@ -662,10 +689,28 @@ export function registerDriverRoutes(app: Express) {
     }
   });
 
-  // Get driver current location
-  app.get('/api/drivers/:id/location', async (req, res) => {
+  // Get driver current location - HANYA untuk customer yang memiliki order aktif dengan driver tersebut
+  app.get('/api/drivers/:id/location', authenticateToken, async (req, res) => {
     try {
       const driverId = parseInt(req.params.id);
+      const userId = (req as any).user.userId;
+      
+      // Verifikasi customer memiliki order aktif dengan driver ini
+      const activeOrder = await db
+        .select()
+        .from(orders)
+        .where(
+          and(
+            eq(orders.customerId, userId),
+            eq(orders.driverId, driverId),
+            sql`${orders.status} IN ('picked_up', 'on_the_way')`
+          )
+        )
+        .limit(1);
+      
+      if (!activeOrder.length) {
+        return res.status(403).json({ message: "Tidak ada order aktif dengan driver ini" });
+      }
       
       // Get from DriverMatchingService real-time data
       const { DriverMatchingService } = await import('../services/driverMatching');
@@ -673,24 +718,52 @@ export function registerDriverRoutes(app: Express) {
       const location = driverService.getDriverLocation(driverId);
       
       if (!location) {
-        return res.status(404).json({ message: "Driver location not found" });
+        return res.status(404).json({ message: "Lokasi driver tidak ditemukan" });
       }
       
       res.json({ lat: location.lat, lng: location.lng });
     } catch (error) {
-      
-      res.status(500).json({ message: "Failed to fetch driver location" });
+      res.status(500).json({ message: "Gagal mengambil lokasi driver" });
     }
   });
 
-  // Update driver location
-  app.post('/api/drivers/:id/location', async (req, res) => {
+  // Update driver location - HANYA driver yang login bisa update lokasi sendiri
+  app.post('/api/drivers/:id/location', authenticateToken, locationLimiter, async (req, res) => {
     try {
       const driverId = parseInt(req.params.id);
+      const userId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
       const { lat, lng } = req.body;
       
-      if (!lat || !lng) {
-        return res.status(400).json({ message: "Latitude and longitude required" });
+      // Validasi input
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        return res.status(400).json({ message: "Latitude dan longitude harus berupa angka" });
+      }
+      
+      // Validasi koordinat Indonesia
+      if (!validateIndonesianCoordinates(lat, lng)) {
+        return res.status(400).json({ message: "Koordinat tidak valid untuk wilayah Indonesia" });
+      }
+      
+      // Pastikan hanya driver yang bisa update dan hanya lokasi sendiri
+      if (userRole !== 'driver') {
+        return res.status(403).json({ message: "Hanya driver yang dapat mengupdate lokasi" });
+      }
+      
+      // Verifikasi driver hanya bisa update lokasi sendiri
+      const driver = await db
+        .select()
+        .from(drivers)
+        .where(and(eq(drivers.id, driverId), eq(drivers.userId, userId)))
+        .limit(1);
+      
+      if (!driver.length) {
+        return res.status(403).json({ message: "Tidak dapat mengupdate lokasi driver lain" });
+      }
+      
+      // Pastikan driver sedang online
+      if (!driver[0].isOnline) {
+        return res.status(400).json({ message: "Harus online untuk mengupdate lokasi" });
       }
       
       // Update in DriverMatchingService
@@ -698,10 +771,9 @@ export function registerDriverRoutes(app: Express) {
       const driverService = DriverMatchingService.getInstance();
       driverService.updateDriverLocation(driverId, lat, lng);
       
-      res.json({ message: "Location updated successfully", lat, lng });
+      res.json({ message: "Lokasi berhasil diupdate", lat, lng });
     } catch (error) {
-      
-      res.status(500).json({ message: "Failed to update driver location" });
+      res.status(500).json({ message: "Gagal mengupdate lokasi driver" });
     }
   });
 }

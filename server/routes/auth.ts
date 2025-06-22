@@ -251,18 +251,22 @@ export function registerAuthRoutes(app: Express) {
 
 // Middleware to authenticate JWT token
 export function authenticateToken(req: any, res: any, next: any) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
-    return res.status(401).json({ message: "Token tidak ditemukan" });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) {
-      return res.status(403).json({ message: "Token tidak valid" });
+    if (!token) {
+      return res.status(401).json({ message: "Token tidak ditemukan" });
     }
-    req.user = user;
-    next();
-  });
+
+    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+      if (err) {
+        return res.status(403).json({ message: "Token tidak valid" });
+      }
+      req.user = user;
+      next();
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 }

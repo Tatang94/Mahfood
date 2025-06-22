@@ -145,13 +145,21 @@ export function useNotifications() {
   // Update driver location (for drivers)
   const updateDriverLocation = (lat: number, lng: number) => {
     if (wsRef.current && user?.role === 'driver') {
-      const message = {
-        type: 'update_driver_location',
-        driverId: user.id,
-        location: { lat, lng }
+      // Validasi koordinat Indonesia
+      const INDONESIA_BOUNDS = {
+        north: 6.5, south: -11.5, west: 95.0, east: 141.0
       };
       
-      wsRef.current.send(JSON.stringify(message));
+      if (lat >= INDONESIA_BOUNDS.south && lat <= INDONESIA_BOUNDS.north && 
+          lng >= INDONESIA_BOUNDS.west && lng <= INDONESIA_BOUNDS.east) {
+        const message = {
+          type: 'update_driver_location',
+          driverId: user.id,
+          location: { lat, lng }
+        };
+        
+        wsRef.current.send(JSON.stringify(message));
+      }
     }
   };
 
