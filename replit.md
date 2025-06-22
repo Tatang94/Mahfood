@@ -102,6 +102,12 @@ The application is configured for multiple deployment targets:
     - Driver hanya bisa update lokasi sendiri
     - Customer hanya bisa lihat lokasi driver yang melayani order mereka
     - Validasi WebSocket untuk real-time location updates
+  - **KEAMANAN DASHBOARD RESTORAN**: Implementasi autentikasi ketat untuk semua endpoint
+    - JWT token wajib untuk semua API restaurant
+    - Validasi kepemilikan: restaurant hanya bisa akses data sendiri
+    - Endpoint profile, orders, menu, stats dilindungi authenticateToken
+    - Role-based access control untuk restaurant/customer/driver
+    - Auto-attach JWT token pada semua request dari frontend
   - Aplikasi berjalan dengan aman di port 5000 dengan semua fitur keamanan aktif
 
 - January 15, 2025: Implemented comprehensive driver dashboard features

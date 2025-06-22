@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { storage } from "../storage";
+import { authenticateToken } from "./auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -39,15 +40,24 @@ const upload = multer({
 });
 
 export function registerRestaurantRoutes(app: Express) {
-  // Get restaurant profile by user ID
-  app.get('/api/restaurants/profile', async (req, res) => {
+  // Get restaurant profile by user ID - HANYA untuk restaurant yang login
+  app.get('/api/restaurants/profile', authenticateToken, async (req, res) => {
     try {
-      const userId = parseInt(req.query.userId as string);
-      if (!userId) {
-        return res.status(400).json({ message: "User ID required" });
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      const requestedUserId = parseInt(req.query.userId as string);
+      
+      // Pastikan hanya restaurant role yang bisa akses
+      if (userRole !== 'restaurant') {
+        return res.status(403).json({ message: "Akses ditolak. Hanya restoran yang dapat mengakses." });
+      }
+      
+      // Pastikan restaurant hanya bisa akses profil sendiri
+      if (authenticatedUserId !== requestedUserId) {
+        return res.status(403).json({ message: "Tidak dapat mengakses profil restoran lain." });
       }
 
-      const restaurant = await storage.getRestaurantByUserId(userId);
+      const restaurant = await storage.getRestaurantByUserId(authenticatedUserId);
       
       if (!restaurant) {
         return res.status(404).json({ message: "Restaurant not found" });
@@ -60,12 +70,26 @@ export function registerRestaurantRoutes(app: Express) {
     }
   });
 
-  // Get orders for restaurant
-  app.get('/api/orders/restaurant', async (req, res) => {
+  // Get orders for restaurant - HANYA untuk restaurant pemilik
+  app.get('/api/orders/restaurant', authenticateToken, async (req, res) => {
     try {
       const restaurantId = parseInt(req.query.restaurantId as string);
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      
       if (!restaurantId) {
         return res.status(400).json({ message: "Restaurant ID required" });
+      }
+      
+      // Pastikan hanya restaurant role yang bisa akses
+      if (userRole !== 'restaurant') {
+        return res.status(403).json({ message: "Akses ditolak. Hanya restoran yang dapat mengakses." });
+      }
+      
+      // Verifikasi kepemilikan restoran
+      const restaurant = await storage.getRestaurantById(restaurantId);
+      if (!restaurant || restaurant.userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Tidak dapat mengakses pesanan restoran lain." });
       }
 
       const orders = await storage.getOrdersByRestaurant(restaurantId);
@@ -92,20 +116,40 @@ export function registerRestaurantRoutes(app: Express) {
     }
   });
 
-  // Update order status
-  app.patch('/api/orders/:id/status', async (req, res) => {
+  // Update order status - HANYA restaurant pemilik yang bisa update status pesanan
+  app.patch('/api/orders/:id/status', authenticateToken, async (req, res) => {
     try {
       const orderId = parseInt(req.params.id);
       const { status } = req.body;
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
       
       const validStatuses = ["pending", "confirmed", "preparing", "ready", "delivering", "delivered", "cancelled"];
       if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
+        return res.status(400).json({ message: "Status tidak valid" });
+      }
+      
+      // Pastikan hanya restaurant dan driver yang bisa update status
+      if (!['restaurant', 'driver'].includes(userRole)) {
+        return res.status(403).json({ message: "Akses ditolak." });
+      }
+      
+      // Verifikasi kepemilikan order untuk restaurant
+      if (userRole === 'restaurant') {
+        const order = await storage.getOrderById(orderId);
+        if (!order) {
+          return res.status(404).json({ message: "Pesanan tidak ditemukan" });
+        }
+        
+        const restaurant = await storage.getRestaurantById(order.restaurantId);
+        if (!restaurant || restaurant.userId !== authenticatedUserId) {
+          return res.status(403).json({ message: "Tidak dapat mengupdate pesanan restoran lain." });
+        }
       }
 
       const order = await storage.updateOrderStatus(orderId, status);
       if (!order) {
-        return res.status(404).json({ message: "Order not found" });
+        return res.status(404).json({ message: "Pesanan tidak ditemukan" });
       }
       
       res.json(order);
@@ -155,15 +199,27 @@ export function registerRestaurantRoutes(app: Express) {
     }
   });
 
-  // Get restaurant menu
-  app.get('/api/restaurants/:id/menu', async (req, res) => {
+  // Get restaurant menu - HANYA untuk restaurant pemilik atau customer
+  app.get('/api/restaurants/:id/menu', authenticateToken, async (req, res) => {
     try {
       const restaurantId = parseInt(req.params.id);
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      
+      // Customer bisa lihat menu semua restoran, restaurant hanya menu sendiri
+      if (userRole === 'restaurant') {
+        const restaurant = await storage.getRestaurantById(restaurantId);
+        if (!restaurant || restaurant.userId !== authenticatedUserId) {
+          return res.status(403).json({ message: "Tidak dapat mengakses menu restoran lain." });
+        }
+      } else if (userRole !== 'customer') {
+        return res.status(403).json({ message: "Akses ditolak." });
+      }
+      
       const menuItems = await storage.getFoodItemsByRestaurant(restaurantId);
       res.json(menuItems);
     } catch (error) {
-      
-      res.status(500).json({ message: "Failed to fetch menu" });
+      res.status(500).json({ message: "Gagal mengambil menu" });
     }
   });
 
@@ -246,12 +302,25 @@ export function registerRestaurantRoutes(app: Express) {
     }
   });
 
-  // Get restaurant stats
-  app.get('/api/restaurants/:id/stats', async (req, res) => {
+  // Get restaurant stats - HANYA untuk restaurant pemilik
+  app.get('/api/restaurants/:id/stats', authenticateToken, async (req, res) => {
     try {
       const restaurantId = parseInt(req.params.id);
-      const orders = await storage.getOrdersByRestaurant(restaurantId);
+      const authenticatedUserId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
+      
+      // Pastikan hanya restaurant role yang bisa akses
+      if (userRole !== 'restaurant') {
+        return res.status(403).json({ message: "Akses ditolak. Hanya restoran yang dapat mengakses." });
+      }
+      
+      // Verifikasi kepemilikan restoran
       const restaurant = await storage.getRestaurantById(restaurantId);
+      if (!restaurant || restaurant.userId !== authenticatedUserId) {
+        return res.status(403).json({ message: "Tidak dapat mengakses data restoran lain." });
+      }
+      
+      const orders = await storage.getOrdersByRestaurant(restaurantId);
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);

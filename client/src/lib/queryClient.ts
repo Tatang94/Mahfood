@@ -17,10 +17,15 @@ export async function apiRequest(
 ): Promise<any> {
   const { method = "GET", body, headers = {} } = options;
   
+  // Ambil token dari localStorage untuk autentikasi
+  const token = localStorage.getItem('auth_token');
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  
   const res = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -39,7 +44,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Ambil token dari localStorage untuk autentikasi
+    const token = localStorage.getItem('auth_token');
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+    
     const res = await fetch(queryKey[0] as string, {
+      headers: {
+        ...authHeaders,
+      },
       credentials: "include",
     });
 
