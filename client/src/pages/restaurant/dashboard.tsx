@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Home,
   ShoppingBag,
@@ -23,45 +26,102 @@ import {
 
 export default function RestaurantDashboard() {
   const [activeTab, setActiveTab] = useState("beranda");
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Data penjualan harian
-  const salesData = {
-    today: 2850000,
-    yesterday: 2150000,
-    growth: ((2850000 - 2150000) / 2150000 * 100).toFixed(1),
-    thisWeek: 18750000,
-    thisMonth: 72500000
+  // Get current user and restaurant profile
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/me"],
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: restaurant } = useQuery({
+    queryKey: ["/api/restaurants/profile", user?.id],
+    queryFn: () => apiRequest(`/api/restaurants/profile?userId=${user?.id}`),
+    enabled: !!user?.id,
+  });
+
+  // Get restaurant stats
+  const { data: stats } = useQuery({
+    queryKey: ["/api/restaurants", (restaurant as any)?.id, "stats"],
+    queryFn: () => apiRequest(`/api/restaurants/${(restaurant as any)?.id}/stats`),
+    enabled: !!(restaurant as any)?.id,
+  });
+
+  // Get restaurant orders
+  const { data: orders = [] } = useQuery({
+    queryKey: ["/api/orders/restaurant", (restaurant as any)?.id],
+    queryFn: () => apiRequest(`/api/orders/restaurant?restaurantId=${(restaurant as any)?.id}`),
+    enabled: !!(restaurant as any)?.id,
+  });
+
+  // Get restaurant menu
+  const { data: menuItems = [] } = useQuery({
+    queryKey: ["/api/restaurants", (restaurant as any)?.id, "menu"],
+    queryFn: () => apiRequest(`/api/restaurants/${(restaurant as any)?.id}/menu`),
+    enabled: !!(restaurant as any)?.id,
+  });
+
+  // Update order status mutation
+  const updateOrderMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
+      apiRequest(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/restaurant"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/restaurants", (restaurant as any)?.id, "stats"] });
+      toast({ title: "Status pesanan berhasil diperbarui" });
+    },
+  });
+
+  useEffect(() => {
+    if ((restaurant as any)?.id) {
+      setRestaurantId((restaurant as any).id);
+    }
+  }, [restaurant]);
+
+  const handleAcceptOrder = (orderId: number) => {
+    updateOrderMutation.mutate({ orderId, status: "confirmed" });
   };
 
-  // Status pesanan
+  // Calculate order stats from real data
   const orderStats = {
-    pending: 5,
-    ongoing: 12,
-    completed: 47,
-    total: 64
+    pending: orders.filter((o: any) => o.status === "pending").length,
+    ongoing: orders.filter((o: any) => ["confirmed", "preparing", "ready"].includes(o.status)).length,
+    completed: orders.filter((o: any) => o.status === "delivered").length,
+    total: orders.length,
   };
 
-  // Saldo dompet
-  const walletBalance = 15750000;
+  // Calculate sales data from real orders
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
 
-  // Menu makanan
-  const menuItems = [
-    { id: 1, name: "Nasi Gudeg Yogya", price: 25000, image: "🍛", stock: 25, category: "Makanan Utama", sold: 15 },
-    { id: 2, name: "Ayam Bakar Madu", price: 35000, image: "🍗", stock: 0, category: "Makanan Utama", sold: 8 },
-    { id: 3, name: "Es Teh Manis", price: 8000, image: "🧊", stock: 50, category: "Minuman", sold: 32 },
-    { id: 4, name: "Bakso Malang", price: 20000, image: "🍜", stock: 15, category: "Makanan Utama", sold: 12 },
-    { id: 5, name: "Gado-gado Jakarta", price: 18000, image: "🥗", stock: 20, category: "Makanan Utama", sold: 9 },
-    { id: 6, name: "Es Jeruk Peras", price: 10000, image: "🍊", stock: 30, category: "Minuman", sold: 18 }
-  ];
+  const todayOrders = orders.filter((o: any) => new Date(o.createdAt) >= today);
+  const yesterdayOrders = orders.filter((o: any) => {
+    const orderDate = new Date(o.createdAt);
+    return orderDate >= yesterday && orderDate < today;
+  });
 
-  // Pesanan terbaru
-  const recentOrders = [
-    { id: 1, customer: "Ahmad S.", items: "2x Nasi Gudeg", total: 50000, status: "pending", time: "10:30", orderId: "#ORD001" },
-    { id: 2, customer: "Sari M.", items: "1x Ayam Bakar, 1x Es Teh", total: 43000, status: "ongoing", time: "10:25", orderId: "#ORD002" },
-    { id: 3, customer: "Budi P.", items: "3x Bakso Malang", total: 60000, status: "completed", time: "10:15", orderId: "#ORD003" },
-    { id: 4, customer: "Dewi K.", items: "1x Gado-gado, 1x Es Jeruk", total: 28000, status: "pending", time: "10:35", orderId: "#ORD004" },
-    { id: 5, customer: "Andi R.", items: "2x Es Teh Manis", total: 16000, status: "ongoing", time: "10:20", orderId: "#ORD005" }
-  ];
+  const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
+  const yesterdayRevenue = yesterdayOrders.reduce((sum: number, o: any) => sum + o.totalAmount, 0);
+  const growth = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(1) : "0";
+
+  const salesData = {
+    today: todayRevenue,
+    yesterday: yesterdayRevenue,
+    growth,
+    thisWeek: stats?.thisWeekRevenue || 0,
+    thisMonth: stats?.thisMonthRevenue || 0,
+  };
+
+  // Use restaurant balance or default to 0
+  const walletBalance = (restaurant as any)?.balance || 0;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -118,7 +178,7 @@ export default function RestaurantDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-gray-900">Dashboard Mitra</h1>
-            <p className="text-sm text-gray-600">Restoran Rasa Nusantara</p>
+            <p className="text-sm text-gray-600">{(restaurant as any)?.name || "Loading..."}</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="p-2">
@@ -248,25 +308,34 @@ export default function RestaurantDashboard() {
               </div>
 
               <div className="space-y-3">
-                {recentOrders.slice(0, 3).map(order => (
+                {orders.slice(0, 3).map((order: any) => (
                   <Card key={order.id} className="border-0 shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-gray-900">{order.customer}</span>
+                            <span className="font-medium text-gray-900">{order.customerName || "Customer"}</span>
                             <Badge className={`${getStatusColor(order.status)} text-xs`}>
                               {getStatusText(order.status)}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-600">{order.items}</p>
+                          <p className="text-sm text-gray-600">
+                            {order.items?.map((item: any) => `${item.quantity}x ${item.name}`).join(", ") || "Order items"}
+                          </p>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-sm font-medium text-gray-900">{formatCurrency(order.total)}</span>
-                            <span className="text-xs text-gray-500">{order.time} • {order.orderId}</span>
+                            <span className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • #{order.id}
+                            </span>
                           </div>
                         </div>
                         {order.status === 'pending' && (
-                          <Button size="sm" className="ml-4 bg-green-600 hover:bg-green-700 text-white">
+                          <Button 
+                            size="sm" 
+                            className="ml-4 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleAcceptOrder(order.id)}
+                            disabled={updateOrderMutation.isPending}
+                          >
                             Terima
                           </Button>
                         )}
@@ -283,7 +352,7 @@ export default function RestaurantDashboard() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Pesanan</h2>
             <div className="space-y-3">
-              {recentOrders.map(order => (
+              {orders.map((order: any) => (
                 <Card key={order.id} className="border-0 shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -328,12 +397,12 @@ export default function RestaurantDashboard() {
               </Button>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              {menuItems.map(item => (
+              {menuItems.map((item: any) => (
                 <Card key={item.id} className="border-0 shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-4">
                       <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                        {item.image}
+                        🍽️
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
@@ -344,11 +413,11 @@ export default function RestaurantDashboard() {
                             </Button>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600">{item.category}</p>
+                        <p className="text-sm text-gray-600">{item.categoryId}</p>
                         <div className="flex items-center justify-between mt-2">
                           <span className="font-semibold text-gray-900">{formatCurrency(item.price)}</span>
                           <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-600">Terjual: {item.sold}</span>
+                            <span className="text-sm text-gray-600">Tersedia</span>
                             <div className={`flex items-center space-x-1 ${item.stock === 0 ? 'text-red-600' : 'text-green-600'}`}>
                               <Package className="w-4 h-4" />
                               <span className="text-sm font-medium">{item.stock === 0 ? 'Habis' : `${item.stock} tersisa`}</span>
