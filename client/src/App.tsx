@@ -78,6 +78,35 @@ function Router() {
       
       {/* Driver Routes */}
       <Route path="/driver/login" component={DriverSignIn} />
+      <Route path="/driver/signin" component={DriverSignIn} />
+      <Route path="/driver/register" component={DriverRegister} />
+      <Route path="/driver" component={() => {
+        if (!isAuthenticated) {
+          window.location.href = '/driver/login';
+          return null;
+        }
+        if (user?.role !== 'driver') {
+          window.location.href = '/';
+          return null;
+        }
+        return <DriverDashboard />;
+      }} />
+      
+      {/* Restaurant Routes */}
+      <Route path="/restaurant/login" component={RestaurantLogin} />
+      <Route path="/restaurant/signin" component={RestaurantSignIn} />
+      <Route path="/restaurant/register" component={RestaurantRegister} />
+      <Route path="/restaurant" component={() => {
+        if (!isAuthenticated) {
+          window.location.href = '/restaurant/login';
+          return null;
+        }
+        if (user?.role !== 'restaurant') {
+          window.location.href = '/';
+          return null;
+        }
+        return <RestaurantDashboard />;
+      }} />
       <Route path="/driver/signin" component={DriverRegister} />
       <Route path="/driver/register" component={DriverRegister} />
       <Route path="/driver/dashboard" component={DriverDashboard} />
