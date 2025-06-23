@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "ES2020",
     "module": "commonjs",
+    "lib": ["es2020"],
     "esModuleInterop": true,
     "moduleResolution": "node",
+    "types": ["node"],
+    "resolveJsonModule": true,
     "strict": true,
-    "skipLibCheck": true,
-    "outDir": "dist"
+    "baseUrl": "."
   },
-  "include": ["index.ts"]
+  "include": ["api/**/*.ts"]
 }
