@@ -2,26 +2,23 @@
   "version": 2,
   "builds": [
     {
-      "src": "client/package.json",
+      "src": "package.json",  // Build frontend (Vite)
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "cd client && npm install && npm run build"
-      }
+      "config": { "distDir": "dist" }
     },
     {
-      "src": "api/index.ts",
+      "src": "api/index.ts",  // Build backend (Node.js)
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts"
+      "src": "/api/.*",      // Route semua /api/* ke backend
+      "dest": "api/index.ts"
     },
     {
-      "src": "/(.*)",
-      "dest": "/client/dist/index.html"
+      "src": "/.*",          // Route lainnya ke frontend
+      "dest": "/index.html"  // Pastikan ini sesuai output Vite
     }
   ]
 }
